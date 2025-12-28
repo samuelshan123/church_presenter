@@ -1,4 +1,4 @@
 # church_presenter
 
-A new Flutter project.
-# church_presenter
+A multiplatform app that allow you to present songs,bible verses etc..
+
