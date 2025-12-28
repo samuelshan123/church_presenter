@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presenter</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@400..800&display=swap');
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgb(34, 34, 34), black);
+      font-family: "Baloo Thambi 2", system-ui;
+      font-optical-sizing: auto;
+    }
+
+    #content {
+      font-weight: bold;
+      color: #fff;
+      text-align: center;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      word-break: break-word;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25), 0 1px 0 #fff;
+    }
+
+    #book {
+      font-weight: bold;
+      color: #fff;
+      text-align: center;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      margin-bottom: 0.5em;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25), 0 1px 0 #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="padding: 20px;">
+    <div id="book"></div>
+    <div id="content">Welcome</div>
+  </div>
+  <script>
+    let socket;
+
+    function connectWebSocket() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      socket = new WebSocket(`${protocol}//${location.host}/api/ws`);
+
+      socket.onopen = function () {
+        console.log('WebSocket connected');
+      };
+
+      socket.onmessage = function (event) {
+        try {
+          const data = JSON.parse(event.data);
+          console.log(data);
+          let type = data.type; // e.g., 'text', 'bible', 'song'
+          let config = data.config || {};
+          let metadata = data.metadata || {};
+          let msg = data.content;
+          if (!msg) msg = "";
+
+          // Apply config values if not default
+          const body = document.body;
+          const contentEl = document.getElementById("content");
+          const bookEl = document.getElementById("book");
+
+          // Background color
+          if (config.bg && config.bg !== "default") {
+            body.style.background = config.bg;
+          } else {
+            body.style.background = "radial-gradient(circle, rgb(34, 34, 34), black)";
+          }
+
+          // Foreground color
+          if (config.fg && config.fg !== "default") {
+            contentEl.style.color = config.fg;
+            bookEl.style.color = config.fg;
+          } else {
+            contentEl.style.color = "#fff";
+            bookEl.style.color = "#fff";
+          }
+
+          // Font size
+          if (config.fontSize && config.fontSize !== "default") {
+            contentEl.style.fontSize = config.fontSize + "px";
+            bookEl.style.fontSize = (config.fontSize * 0.7) + "px";
+          } else {
+            contentEl.style.fontSize = "clamp(2rem, 6vw, 3.5rem)";
+            bookEl.style.fontSize = "clamp(1.5rem, 4vw, 2.5rem)";
+          }
+
+          // Font family
+          if (config.font && config.font !== "default") {
+            body.style.fontFamily = config.font;
+          } else {
+            body.style.fontFamily = '"Baloo Thambi 2", system-ui';
+          }
+
+          document.getElementById("book").innerText = (type === 'bible' && metadata.book) ? metadata.book : '';
+          document.getElementById("content").innerText = msg;
+        } catch (err) {
+          console.error('Parse error:', err);
+        }
+      };
+
+      socket.onclose = function () {
+        console.log('WebSocket disconnected, attempting to reconnect...');
+        setTimeout(connectWebSocket, 3000);
+      };
+
+      socket.onerror = function (error) {
+        console.error('WebSocket error:', error);
+      };
+    }
+
+    connectWebSocket();
+  </script>
+</body>
+
+</html>

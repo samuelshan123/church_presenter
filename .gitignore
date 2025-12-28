@@ -1,0 +1,84 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.build/
+.melos/
+.pub-cache/
+.pub/
+.idea/
+.vscode/
+test-coverage/
+project.iml
+*.iml
+.tmp
+
+# Generated files
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/app.flx
+ios/Flutter/app_framework_info.plist
+ios/Flutter/engine/
+ios/Flutter/ephemeral/
+
+# iOS
+*.mode1v3
+*.mode2v3
+*.pbxuser
+*.xcworkspace
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+Pods/
+GeneratedPluginRegistrant.*
+
+# Android
+local.properties
+*.log
+*.lock
+.gradle/
+.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+**/build/
+android/app/proguard-rules.pro
+app/proguard-rules.pro
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Files for macOS builds
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
+macos/Flutter/ephemeral/
+
+# Web
+web/.dart_tool/
+
+# Linux
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/CMakeLists.txt
+linux/flutter/app/generated_config.cmake
+
+# Windows
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/ephemeral/
+
+# Coverage
+coverage/
+
+# Others
+*.dart_tool/
+
+.DS_Store
+.DS_Store?
+._*
+
+# FVM Version Cache
+.fvm/
+.fvmrc
