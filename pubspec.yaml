@@ -32,3 +32,70 @@ flutter:
   assets:
   - assets/presenter/web/index.html
   - assets/bible/
+  - assets/bible/Books.json
+  - assets/bible/Genesis.json
+  - assets/bible/Exodus.json
+  - assets/bible/Leviticus.json
+  - assets/bible/Numbers.json
+  - assets/bible/Deuteronomy.json
+  - assets/bible/Joshua.json
+  - assets/bible/Judges.json
+  - assets/bible/Ruth.json
+  - assets/bible/1 Samuel.json
+  - assets/bible/2 Samuel.json
+  - assets/bible/1 Kings.json
+  - assets/bible/2 Kings.json
+  - assets/bible/1 Chronicles.json
+  - assets/bible/2 Chronicles.json
+  - assets/bible/Ezra.json
+  - assets/bible/Nehemiah.json
+  - assets/bible/Esther.json
+  - assets/bible/Job.json
+  - assets/bible/Psalms.json
+  - assets/bible/Proverbs.json
+  - assets/bible/Ecclesiastes.json
+  - assets/bible/Song of Songs.json
+  - assets/bible/Isaiah.json
+  - assets/bible/Jeremiah.json
+  - assets/bible/Lamentations.json
+  - assets/bible/Ezekiel.json
+  - assets/bible/Daniel.json
+  - assets/bible/Hosea.json
+  - assets/bible/Joel.json
+  - assets/bible/Amos.json
+  - assets/bible/Obadiah.json
+  - assets/bible/Jonah.json
+  - assets/bible/Micah.json
+  - assets/bible/Nahum.json
+  - assets/bible/Habakkuk.json
+  - assets/bible/Zephaniah.json
+  - assets/bible/Haggai.json
+  - assets/bible/Zechariah.json
+  - assets/bible/Malachi.json
+  - assets/bible/Matthew.json
+  - assets/bible/Mark.json
+  - assets/bible/Luke.json
+  - assets/bible/John.json
+  - assets/bible/Acts.json
+  - assets/bible/Romans.json
+  - assets/bible/1 Corinthians.json
+  - assets/bible/2 Corinthians.json
+  - assets/bible/Galatians.json
+  - assets/bible/Ephesians.json
+  - assets/bible/Philippians.json
+  - assets/bible/Colossians.json
+  - assets/bible/1 Thessalonians.json
+  - assets/bible/2 Thessalonians.json
+  - assets/bible/1 Timothy.json
+  - assets/bible/2 Timothy.json
+  - assets/bible/Titus.json
+  - assets/bible/Philemon.json
+  - assets/bible/Hebrews.json
+  - assets/bible/James.json
+  - assets/bible/1 Peter.json
+  - assets/bible/2 Peter.json
+  - assets/bible/1 John.json
+  - assets/bible/2 John.json
+  - assets/bible/3 John.json
+  - assets/bible/Jude.json
+  - assets/bible/Revelation.json

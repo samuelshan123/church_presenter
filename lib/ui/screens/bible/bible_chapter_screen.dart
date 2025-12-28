@@ -3,7 +3,6 @@ import 'package:church_presenter/db/models/bible_verse.dart';
 import 'package:church_presenter/services/bible_service.dart';
 import 'package:church_presenter/services/server_service.dart';
 import 'package:flutter/material.dart';
-import '../../widgets/live_status_badge.dart';
 import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
 
@@ -272,24 +271,28 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             // Book selector
-            InkWell(
-              onTap: _showBookSelector,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _currentBook?.tamil ?? 'Loading...',
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down, size: 24),
-                ],
+            Flexible(
+              child: InkWell(
+                onTap: _showBookSelector,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        _currentBook?.tamil ?? 'Loading...',
+                        style: const TextStyle(fontSize: 18),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_drop_down, size: 24),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 8),
             // Chapter selector
             InkWell(
               onTap: _showChapterSelector,
@@ -307,9 +310,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
             ),
           ],
         ),
-        centerTitle: true,
         elevation: 0,
-        actions: [if (serverActive) const LiveStatusBadge()],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -373,7 +374,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
@@ -386,37 +387,10 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.secondaryContainer,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  '${verse.verseNumber}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimary
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.onSecondaryContainer,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
+                             
                               Expanded(
                                 child: Text(
-                                  verse.verseText,
+                                  '${verse.verseNumber}. ${verse.verseText}',
                                   style: TextStyle(
                                     fontSize: 16,
                                     height: 1.6,

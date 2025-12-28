@@ -99,20 +99,6 @@ class _BibleScreenState extends State<BibleScreen> {
                     vertical: 4,
                   ),
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                     title: Text(
                       book.tamil,
                       style: const TextStyle(

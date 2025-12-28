@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../db/models/song.dart';
 import '../../../services/server_service.dart';
-import '../../widgets/live_status_badge.dart';
 import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
 
@@ -106,7 +105,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
       appBar: AppBar(
         title: Text(widget.song.title),
         elevation: 0,
-        actions: [if (serverActive) const LiveStatusBadge()],
+        // actions: [if (serverActive) const LiveStatusBadge()],
       ),
       body: Column(
         children: [
