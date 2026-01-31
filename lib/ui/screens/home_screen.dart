@@ -6,6 +6,7 @@ import '../widgets/grid_card_widget.dart';
 import 'songs/songs_screen.dart';
 import 'bible/bible_screen.dart';
 import 'backgrounds_screen.dart';
+import 'images_screen.dart';
 import 'presenter/presenter_screen.dart';
 import 'settings_screen.dart';
 
@@ -95,6 +96,20 @@ class HomeScreen extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) =>
                                   BibleScreen(serverService: serverService),
+                            ),
+                          );
+                        },
+                      ),
+                      GridCardWidget(
+                        icon: Icons.photo_library,
+                        title: 'Images',
+                        iconColor: Colors.green,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ImagesScreen(serverService: serverService),
                             ),
                           );
                         },

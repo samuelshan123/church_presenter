@@ -9,9 +9,13 @@ import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'presenter_config_service.dart';
+import 'background_service.dart';
+import 'image_service.dart';
 
 class ServerService extends ChangeNotifier {
   final PresenterConfigService presenterConfig;
+  final BackgroundService backgroundService;
+  final ImageService imageService;
   HttpServer? _server;
   String? _deviceIp;
   String? _currentMessage;
@@ -19,7 +23,11 @@ class ServerService extends ChangeNotifier {
   final int port = 8080;
   final List<WebSocketChannel> _connectedClients = [];
 
-  ServerService({required this.presenterConfig});
+  ServerService({
+    required this.presenterConfig,
+    required this.backgroundService,
+    required this.imageService,
+  });
 
   bool get isRunning => _isRunning;
   String? get deviceIp => _deviceIp;
@@ -40,10 +48,15 @@ class ServerService extends ChangeNotifier {
           '✅ WebSocket client connected. Total: ${_connectedClients.length}',
         );
 
-        // Send current message on connection
-        if (_currentMessage != null) {
-          socket.sink.add(jsonEncode({'message': _currentMessage}));
-        }
+        // Send current state on connection (including background)
+        var initialPayload = {
+          'config': presenterConfig.getConfig(),
+          'background': backgroundService.getBackgroundConfig(),
+          'type': 'text',
+          'content': _currentMessage ?? 'Welcome',
+          'metadata': {},
+        };
+        socket.sink.add(jsonEncode(initialPayload));
 
         // Remove client on disconnect
         socket.stream.listen(
@@ -69,10 +82,59 @@ class ServerService extends ChangeNotifier {
         final html = await rootBundle.loadString(
           'assets/presenter/web/index.html',
         );
-        return Response.ok(html, headers: {'Content-Type': 'text/html'});
+        return Response.ok(
+          html,
+          headers: {
+            'Content-Type': 'text/html',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          },
+        );
       } catch (e) {
         print('❌ Error loading index.html: $e');
         return Response.internalServerError(body: 'Error loading page: $e');
+      }
+    });
+
+    // Serve background image
+    router.get('/api/background', (Request request) async {
+      try {
+        if (backgroundService.hasImage) {
+          final file = File(backgroundService.imagePath!);
+          if (await file.exists()) {
+            final bytes = await file.readAsBytes();
+            final extension = backgroundService.imagePath!
+                .split('.')
+                .last
+                .toLowerCase();
+            final contentType = _getImageContentType(extension);
+            return Response.ok(bytes, headers: {'Content-Type': contentType});
+          }
+        }
+        return Response.notFound('No background image');
+      } catch (e) {
+        print('❌ Error serving background: $e');
+        return Response.internalServerError(body: 'Error loading background');
+      }
+    });
+
+    // Serve content image
+    router.get('/api/image/<imagePath|.*>', (
+      Request request,
+      String imagePath,
+    ) async {
+      try {
+        final decodedPath = Uri.decodeComponent(imagePath);
+        final file = File(decodedPath);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          final extension = decodedPath.split('.').last.toLowerCase();
+          final contentType = _getImageContentType(extension);
+          return Response.ok(bytes, headers: {'Content-Type': contentType});
+        }
+        return Response.notFound('Image not found');
+      } catch (e) {
+        print('❌ Error serving content image: $e');
+        return Response.internalServerError(body: 'Error loading image');
       }
     });
 
@@ -138,6 +200,8 @@ class ServerService extends ChangeNotifier {
     _currentMessage = message;
     var payload = {
       'config': presenterConfig.getConfig(),
+      'background': backgroundService.getBackgroundConfig(),
+      'imageConfig': imageService.getImageConfig(),
       'type': messageType,
       'content': message,
       'metadata': metadata,
@@ -167,6 +231,23 @@ class ServerService extends ChangeNotifier {
       }
     }
     return 'Unknown';
+  }
+
+  /// Get image content type from extension
+  String _getImageContentType(String extension) {
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg';
+    }
   }
 
   @override
