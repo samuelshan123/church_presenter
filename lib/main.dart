@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
@@ -19,7 +20,8 @@ final ServerService globalServerService = ServerService(
 );
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   runApp(const MainApp());
 }
 
@@ -46,6 +48,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     globalPresenterConfig.addListener(() {
       setState(() {});
     });
+    FlutterNativeSplash.remove();
   }
 
   @override
