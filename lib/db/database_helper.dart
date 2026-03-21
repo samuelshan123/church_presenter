@@ -106,6 +106,16 @@ class DatabaseHelper {
     return await db.delete('songs', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<List<Song>> searchSongsByTitle(String title) async {
+    final db = await database;
+    final result = await db.query(
+      'songs',
+      where: 'LOWER(title) LIKE ?',
+      whereArgs: ['%${title.toLowerCase()}%'],
+    );
+    return result.map((json) => Song.fromMap(json)).toList();
+  }
+
   // ==================== SONG LIST OPERATIONS ====================
 
   Future<SongList> createSongList(SongList songList) async {

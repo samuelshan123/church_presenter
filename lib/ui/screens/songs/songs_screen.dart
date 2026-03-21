@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'all_songs_screen.dart';
 import 'my_lists_screen.dart';
+import 'web_search_screen.dart';
 
 class SongsScreen extends StatelessWidget {
   const SongsScreen({super.key});
@@ -40,6 +41,22 @@ class SongsScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const MyListsScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildMenuCard(
+              context,
+              icon: Icons.language,
+              title: 'Web Search',
+              subtitle: 'Search and import Tamil Christian songs from the web',
+              color: Colors.teal,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WebSearchScreen(),
                   ),
                 );
               },
