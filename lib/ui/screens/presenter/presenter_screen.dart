@@ -56,13 +56,11 @@ class _PresenterScreenState extends State<PresenterScreen> {
     }
   }
 
-  void _copyUrl() {
-    if (widget.serverService.deviceIp != null) {
-      Clipboard.setData(ClipboardData(text: widget.serverService.serverUrl));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('📋 URL copied to clipboard')),
-      );
-    }
+  void _copyUrl(String url) {
+    Clipboard.setData(ClipboardData(text: url));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('📋 Copied: $url')),
+    );
   }
 
   void _navigateToTest() {
@@ -134,21 +132,52 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     ),
                     if (widget.serverService.isRunning) ...[
                       const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          widget.serverService.serverUrl,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                      ...widget.serverService.serverUrlsWithLabels.map(
+                        (info) => Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      info.label,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    Text(
+                                      info.url,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => _copyUrl(info.url),
+                                  child: const Icon(
+                                    Icons.copy,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -187,19 +216,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     ),
                   ),
                 ),
-                if (widget.serverService.isRunning) ...[
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _copyUrl,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Icon(Icons.copy),
-                  ),
-                ],
+
               ],
             ),
             const SizedBox(height: 24),

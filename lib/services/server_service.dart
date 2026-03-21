@@ -18,9 +18,10 @@ class ServerService extends ChangeNotifier {
   final ImageService imageService;
   HttpServer? _server;
   String? _deviceIp;
+  List<(String, String)> _deviceIps = []; // (interfaceName, address)
   String? _currentMessage;
   bool _isRunning = false;
-  final int port = 8080;
+  final int port = 8901;
   final List<WebSocketChannel> _connectedClients = [];
 
   ServerService({
@@ -33,6 +34,10 @@ class ServerService extends ChangeNotifier {
   String? get deviceIp => _deviceIp;
   String? get currentMessage => _currentMessage;
   String get serverUrl => 'http://$_deviceIp:$port';
+  List<String> get serverUrls =>
+      _deviceIps.map((e) => 'http://${e.$2}:$port').toList();
+  List<({String label, String url})> get serverUrlsWithLabels =>
+      _deviceIps.map((e) => (label: e.$1, url: 'http://${e.$2}:$port')).toList();
   int get connectedClientsCount => _connectedClients.length;
 
   /// Service Handler
@@ -148,7 +153,10 @@ class ServerService extends ChangeNotifier {
   /// Start Server
   Future<bool> startServer() async {
     try {
-      _deviceIp = await _getLocalIp();
+      final allIps = await _getAllLocalIps();
+      final wlanIps = allIps.where((e) => e.$1.startsWith('wlan')).toList();
+      _deviceIps = wlanIps.isNotEmpty ? wlanIps : allIps;
+      _deviceIp = _deviceIps.isNotEmpty ? _deviceIps.first.$2 : 'Unknown';
       _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, port);
       _isRunning = true;
 
@@ -186,6 +194,8 @@ class ServerService extends ChangeNotifier {
       _server = null;
       _isRunning = false;
       _currentMessage = null;
+      _deviceIps = <(String, String)>[];
+      _deviceIp = null;
       notifyListeners();
       print('🛑 Server stopped');
     }
@@ -221,16 +231,20 @@ class ServerService extends ChangeNotifier {
     print('📤 Broadcast to ${_connectedClients.length} clients: $message');
   }
 
-  /// Get Local IP
-  Future<String> _getLocalIp() async {
-    for (var interface in await NetworkInterface.list()) {
+  /// Get all local non-loopback IPv4 addresses with their interface names
+  Future<List<(String, String)>> _getAllLocalIps() async {
+    final ips = <(String, String)>[];
+    for (var interface in await NetworkInterface.list(
+      includeLoopback: false,
+      includeLinkLocal: false,
+    )) {
       for (var addr in interface.addresses) {
-        if (addr.type == InternetAddressType.IPv4 && !addr.isLoopback) {
-          return addr.address;
+        if (addr.type == InternetAddressType.IPv4) {
+          ips.add((interface.name, addr.address));
         }
       }
     }
-    return 'Unknown';
+    return ips;
   }
 
   /// Get image content type from extension
