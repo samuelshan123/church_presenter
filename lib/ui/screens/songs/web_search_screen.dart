@@ -22,6 +22,12 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -39,7 +45,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
     });
 
     try {
-      final results = await _searchService.searchSongs(query);
+      final results = await _searchService.searchTitles(query);
       if (mounted) {
         setState(() {
           _results = results;
@@ -62,7 +68,6 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
       MaterialPageRoute(
         builder: (_) => WebSongDetailScreen(
           title: result.title,
-          lyrics: result.lyrics,
           sourceUrl: result.resolvedSource,
           serverService: widget.serverService,
         ),
@@ -87,8 +92,9 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+    final hasText = _searchController.text.isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
       child: Row(
         children: [
           Expanded(
@@ -99,6 +105,13 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
               decoration: InputDecoration(
                 hintText: 'Search Tamil Christian songs…',
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: hasText
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => _searchController.clear(),
+                        tooltip: 'Clear',
+                      )
+                    : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -107,23 +120,20 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          FilledButton(
+          IconButton(
             onPressed: _isLoading ? null : _search,
-            style: FilledButton.styleFrom(
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.travel_explore),
+            tooltip: 'Search',
+            style: IconButton.styleFrom(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
-                  )
-                : const Text('Search'),
           ),
         ],
       ),
@@ -138,7 +148,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Searching and fetching lyrics…'),
+            Text('Searching…'),
           ],
         ),
       );
@@ -225,9 +235,6 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
 
   Widget _buildResultTile(WebSongResult result) {
     final domain = _extractDomain(result.resolvedSource);
-    final preview = result.lyrics.length > 120
-        ? '${result.lyrics.substring(0, 120).trim()}…'
-        : result.lyrics;
 
     return Card(
       elevation: 1,
@@ -237,13 +244,13 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                       result.title,
                       style:
                           Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -252,39 +259,27 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.chevron_right),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  const Icon(Icons.language, size: 13, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    domain,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.language, size: 13, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          domain,
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(
+                                color:
+                                    Theme.of(context).colorScheme.primary,
+                              ),
                         ),
-                  ),
-                ],
-              ),
-              if (preview.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  preview,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.55),
-                        height: 1.5,
-                      ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              const Icon(Icons.chevron_right),
             ],
           ),
         ),

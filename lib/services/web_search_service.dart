@@ -54,6 +54,30 @@ class WebSearchService {
     return results;
   }
 
+  /// Fast title-only search — no lyrics fetching, results come back immediately.
+  Future<List<WebSongResult>> searchTitles(String query) async {
+    final searchResults = await _searchWeb(query);
+    final seen = <String>{};
+    final results = <WebSongResult>[];
+    for (final item in searchResults) {
+      final realUrl = _extractRealUrl(item['url']!);
+      if (realUrl == null) continue;
+      final key = _normalizeTitle(item['title']!);
+      if (seen.add(key)) {
+        results.add(WebSongResult(
+          title: item['title']!,
+          source: item['url']!,
+          resolvedSource: realUrl,
+          lyrics: '',
+        ));
+      }
+    }
+    return results;
+  }
+
+  /// Fetches and cleans lyrics for a single URL.
+  Future<String> fetchLyrics(String url) => _scrapeLyrics(url);
+
   // ── private helpers ────────────────────────────────────────────────────────
 
   Future<List<Map<String, String>>> _searchWeb(String query) async {

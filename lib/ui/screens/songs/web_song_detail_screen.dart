@@ -3,19 +3,18 @@ import '../../../db/database_helper.dart';
 import '../../../db/models/song.dart';
 import '../../../db/models/song_list.dart';
 import '../../../services/server_service.dart';
+import '../../../services/web_search_service.dart';
 import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
 
 class WebSongDetailScreen extends StatefulWidget {
   final String title;
-  final String lyrics;
   final String sourceUrl;
   final ServerService? serverService;
 
   const WebSongDetailScreen({
     super.key,
     required this.title,
-    required this.lyrics,
     required this.sourceUrl,
     this.serverService,
   });
@@ -26,11 +25,15 @@ class WebSongDetailScreen extends StatefulWidget {
 
 class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
   final DatabaseHelper _db = DatabaseHelper.instance;
+  final _searchService = WebSearchService();
   late final TextEditingController _titleController;
   late final TextEditingController _lyricsController;
 
   int? _selectedSectionIndex;
   List<String> _displaySections = [];
+
+  bool _loadingLyrics = true;
+  String? _lyricsError;
 
   bool _checkingDb = true;
   bool _existsInDb = false;
@@ -40,10 +43,10 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.title);
-    _lyricsController = TextEditingController(text: widget.lyrics);
-    _rebuildSections();
+    _lyricsController = TextEditingController();
     _lyricsController.addListener(_rebuildSections);
     _checkLocalDb();
+    _fetchLyrics();
   }
 
   @override
@@ -51,6 +54,33 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
     _titleController.dispose();
     _lyricsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchLyrics() async {
+    setState(() {
+      _loadingLyrics = true;
+      _lyricsError = null;
+    });
+    try {
+      final lyrics = await _searchService.fetchLyrics(widget.sourceUrl);
+      if (!mounted) return;
+      if (lyrics.isEmpty) {
+        setState(() {
+          _lyricsError = 'Could not extract lyrics from this page.';
+          _loadingLyrics = false;
+        });
+      } else {
+        _lyricsController.text = lyrics;
+        setState(() => _loadingLyrics = false);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _lyricsError = 'Failed to load lyrics. Check your connection.';
+          _loadingLyrics = false;
+        });
+      }
+    }
   }
 
   // ── section parsing ────────────────────────────────────────────────────────
@@ -283,19 +313,65 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 12),
-                          TextField(
-                            controller: _lyricsController,
-                            decoration: InputDecoration(
-                              hintText: 'Song lyrics',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          if (_loadingLyrics)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 32),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    CircularProgressIndicator(),
+                                    SizedBox(height: 12),
+                                    Text('Fetching lyrics…'),
+                                  ],
+                                ),
                               ),
-                              alignLabelWithHint: true,
+                            )
+                          else if (_lyricsError != null)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 24),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.warning_amber_rounded,
+                                      size: 40, color: Colors.orange),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _lyricsError!,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.6),
+                                        ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  OutlinedButton.icon(
+                                    onPressed: _fetchLyrics,
+                                    icon: const Icon(Icons.refresh),
+                                    label: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            TextField(
+                              controller: _lyricsController,
+                              decoration: InputDecoration(
+                                hintText: 'Song lyrics',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                alignLabelWithHint: true,
+                              ),
+                              maxLines: null,
+                              minLines: 10,
+                              textCapitalization:
+                                  TextCapitalization.sentences,
                             ),
-                            maxLines: null,
-                            minLines: 10,
-                            textCapitalization: TextCapitalization.sentences,
-                          ),
                         ],
                       ),
                     ),
