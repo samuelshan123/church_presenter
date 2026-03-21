@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'all_songs_screen.dart';
 import 'my_lists_screen.dart';
-import 'web_search_screen.dart';
+import 'web/web_search_screen.dart';
 
 class SongsScreen extends StatelessWidget {
   const SongsScreen({super.key});

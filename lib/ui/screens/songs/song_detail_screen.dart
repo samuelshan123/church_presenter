@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../db/models/song.dart';
+import '../../../main.dart';
 import '../../../services/server_service.dart';
 import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
+import '../../widgets/presenter_settings_panel.dart';
 
 class SongDetailScreen extends StatefulWidget {
   final Song song;
@@ -105,7 +107,16 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
       appBar: AppBar(
         title: Text(widget.song.title),
         elevation: 0,
-        // actions: [if (serverActive) const LiveStatusBadge()],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune),
+            tooltip: 'Presenter Settings',
+            onPressed: () => showPresenterSettingsDialog(
+              context,
+              globalPresenterConfig,
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

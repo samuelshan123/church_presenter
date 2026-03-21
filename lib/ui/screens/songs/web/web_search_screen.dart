@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../services/web_search_service.dart';
-import '../../../services/server_service.dart';
+import '../../../../services/web_search_service.dart';
+import '../../../../services/server_service.dart';
 import 'web_song_detail_screen.dart';
 
 class WebSearchScreen extends StatefulWidget {

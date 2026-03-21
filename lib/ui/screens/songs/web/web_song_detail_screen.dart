@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../db/database_helper.dart';
-import '../../../db/models/song.dart';
-import '../../../db/models/song_list.dart';
-import '../../../services/server_service.dart';
-import '../../../services/web_search_service.dart';
-import '../../widgets/broadcast_info_banner.dart';
-import '../../widgets/broadcast_control_bar.dart';
+import '../../../../db/database_helper.dart';
+import '../../../../db/models/song.dart';
+import '../../../../db/models/song_list.dart';
+import '../../../../main.dart';
+import '../../../../services/server_service.dart';
+import '../../../../services/web_search_service.dart';
+import '../../../widgets/broadcast_info_banner.dart';
+import '../../../widgets/broadcast_control_bar.dart';
+import '../../../widgets/presenter_settings_panel.dart';
 
 class WebSongDetailScreen extends StatefulWidget {
   final String title;
@@ -244,6 +246,16 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
       appBar: AppBar(
         title: const Text('Web Song'),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune),
+            tooltip: 'Presenter Settings',
+            onPressed: () => showPresenterSettingsDialog(
+              context,
+              globalPresenterConfig,
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
