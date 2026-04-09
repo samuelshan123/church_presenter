@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../db/database_helper.dart';
 import '../../../db/models/song.dart';
-import '../../../db/models/sync_song_detail.dart';
 import '../../../main.dart';
 import 'view_song_screen.dart';
 
 // ---------------------------------------------------------------------------
-// Tamil character index
+// Tamil letter index
 // ---------------------------------------------------------------------------
 
 const List<String> _kTamilAlphabet = [
@@ -19,14 +18,13 @@ const List<String> _kTamilAlphabet = [
 ];
 
 // ---------------------------------------------------------------------------
-// AllSongsScreen — Tamil alphabet grid
+// BrowseSongsScreen — Tamil alphabet grid index
 // ---------------------------------------------------------------------------
 
-/// Entry page for the synced Tamil song library.
-/// Shows a grid of Tamil characters; tapping one navigates to the filtered
-/// song list for that letter, where each song opens [SongDetailScreen].
-class AllSongsScreen extends StatelessWidget {
-  const AllSongsScreen({super.key});
+/// Top-level entry for the synced Tamil song library.
+/// Displays a 4-column grid of Tamil letters; tapping one opens [SongsByLetterScreen].
+class BrowseSongsScreen extends StatelessWidget {
+  const BrowseSongsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,19 +42,20 @@ class AllSongsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Select a Tamil letter to browse songs',
+              'Select a letter to browse Tamil songs',
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: GridView.builder(
+                physics: const BouncingScrollPhysics(),
                 gridDelegate:
                     const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  childAspectRatio: 1.2,
+                  childAspectRatio: 1.15,
                 ),
                 itemCount: _kTamilAlphabet.length,
                 itemBuilder: (context, index) {
@@ -66,8 +65,7 @@ class AllSongsScreen extends StatelessWidget {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (_) =>
-                            _SongsByLetterPage(letter: letter),
+                        builder: (_) => SongsByLetterScreen(letter: letter),
                       ),
                     ),
                   );
@@ -116,30 +114,33 @@ class _LetterTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Filtered song list for a single letter
+// SongsByLetterScreen — lightweight title-only list
 // ---------------------------------------------------------------------------
 
-class _SongsByLetterPage extends StatefulWidget {
-  const _SongsByLetterPage({required this.letter});
+/// Shows all synced songs whose title starts with [letter].
+/// Only `remote_id` + `title` are loaded into the list — no lyrics.
+/// Tapping a song fetches its full detail on demand, then opens [ViewSongScreen].
+class SongsByLetterScreen extends StatefulWidget {
+  const SongsByLetterScreen({super.key, required this.letter});
   final String letter;
 
   @override
-  State<_SongsByLetterPage> createState() => _SongsByLetterPageState();
+  State<SongsByLetterScreen> createState() => _SongsByLetterScreenState();
 }
 
-class _SongsByLetterPageState extends State<_SongsByLetterPage> {
+class _SongsByLetterScreenState extends State<SongsByLetterScreen> {
   final DatabaseHelper _db = DatabaseHelper.instance;
   final TextEditingController _searchCtrl = TextEditingController();
 
-  List<SyncSongDetail> _allSongs = [];
-  List<SyncSongDetail> _filtered = [];
+  List<({String remoteId, String title})> _songs = [];
   bool _isLoading = true;
+  String? _openingId; // tracks which row is being opened
 
   @override
   void initState() {
     super.initState();
-    _loadSongs();
-    _searchCtrl.addListener(_applyFilter);
+    _loadTitles();
+    _searchCtrl.addListener(_onSearchChanged);
   }
 
   @override
@@ -148,35 +149,46 @@ class _SongsByLetterPageState extends State<_SongsByLetterPage> {
     super.dispose();
   }
 
-  Future<void> _loadSongs() async {
+  Future<void> _loadTitles({String? search}) async {
     setState(() => _isLoading = true);
-    final songs = await _db.getSyncedSongsByFirstLetter(widget.letter);
-    setState(() {
-      _allSongs = songs;
-      _filtered = songs;
-      _isLoading = false;
-    });
+    final rows = await _db.getSyncedSongTitlesByFirstLetter(
+      widget.letter,
+      search: (search == null || search.isEmpty) ? null : search,
+    );
+    if (mounted) {
+      setState(() {
+        _songs = rows;
+        _isLoading = false;
+      });
+    }
   }
 
-  void _applyFilter() {
-    final q = _searchCtrl.text.trim().toLowerCase();
-    setState(() {
-      _filtered = q.isEmpty
-          ? _allSongs
-          : _allSongs
-              .where((s) =>
-                  s.title.toLowerCase().contains(q) ||
-                  s.lyrics.toLowerCase().contains(q))
-              .toList();
-    });
+  void _onSearchChanged() {
+    _loadTitles(search: _searchCtrl.text.trim());
   }
 
-  /// Converts a [SyncSongDetail] into the [Song] model expected by
-  /// [SongDetailScreen] (title + content/lyrics).
-  Song _toSong(SyncSongDetail detail) => Song(
-        title: detail.title,
-        content: detail.lyrics,
+  Future<void> _openSong(String remoteId, String title) async {
+    if (_openingId != null) return;
+    setState(() => _openingId = remoteId);
+    try {
+      final detail = await _db.getSyncedSongDetailById(remoteId);
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => ViewSongScreen(
+            song: Song(
+              title: detail?.title ?? title,
+              content: detail?.lyrics ?? '',
+            ),
+            serverService: globalServerService,
+          ),
+        ),
       );
+    } finally {
+      if (mounted) setState(() => _openingId = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,86 +207,101 @@ class _SongsByLetterPageState extends State<_SongsByLetterPage> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SearchBar(
               controller: _searchCtrl,
-              hintText: 'Search within "${widget.letter}" songs…',
-              leading: const Icon(Icons.search),
+              hintText: 'Search in "${widget.letter}" songs…',
+              leading: const Icon(Icons.search, size: 20),
               trailing: [
                 if (_searchCtrl.text.isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(Icons.clear, size: 18),
                     onPressed: _searchCtrl.clear,
                   ),
               ],
               elevation: WidgetStateProperty.all(1),
+              padding: WidgetStateProperty.all(
+                const EdgeInsets.symmetric(horizontal: 12),
+              ),
             ),
           ),
 
-          // Result count
-          if (!_isLoading)
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '${_filtered.length} '
-                  'song${_filtered.length == 1 ? '' : 's'}',
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(color: cs.onSurfaceVariant),
-                ),
+          // Count
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _isLoading
+                    ? 'Loading…'
+                    : '${_songs.length} song${_songs.length == 1 ? '' : 's'}',
+                style: theme.textTheme.labelMedium
+                    ?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
+          ),
 
           // Song list
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _filtered.isEmpty
+                : _songs.isEmpty
                     ? _EmptyState(letter: widget.letter)
                     : ListView.separated(
+                        physics: const BouncingScrollPhysics(),
                         padding:
-                            const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                        itemCount: _filtered.length,
+                            const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                        itemCount: _songs.length,
                         separatorBuilder: (_, __) =>
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                         itemBuilder: (context, index) {
-                          final detail = _filtered[index];
+                          final s = _songs[index];
+                          final isOpening = _openingId == s.remoteId;
                           return Card(
+                            margin: EdgeInsets.zero,
                             child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
+                              dense: true,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(
                                 horizontal: 16,
-                                vertical: 10,
+                                vertical: 4,
                               ),
                               leading: CircleAvatar(
+                                radius: 18,
                                 backgroundColor:
                                     cs.primary.withValues(alpha: 0.1),
-                                child: Icon(
-                                  Icons.music_note,
-                                  color: cs.primary,
-                                ),
-                              ),
-                              title: Text(
-                                detail.title,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: detail.lyrics.isNotEmpty
-                                  ? Text(
-                                      detail.lyrics.split('\n').first,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  : null,
-                              trailing:
-                                  const Icon(Icons.chevron_right),
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (_) => ViewSongScreen(
-                                    song: _toSong(detail),
-                                    serverService: globalServerService,
+                                child: Text(
+                                  s.title.isNotEmpty
+                                      ? s.title[0]
+                                      : '?',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: cs.primary,
                                   ),
                                 ),
                               ),
+                              title: Text(
+                                s.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: isOpening
+                                  ? SizedBox.square(
+                                      dimension: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: cs.primary,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.chevron_right,
+                                      size: 20,
+                                    ),
+                              onTap: () =>
+                                  _openSong(s.remoteId, s.title),
                             ),
                           );
                         },
@@ -301,21 +328,24 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.music_off_outlined,
-              size: 72, color: cs.onSurface.withValues(alpha: 0.25)),
-          const SizedBox(height: 16),
+          Icon(
+            Icons.music_off_outlined,
+            size: 64,
+            color: cs.onSurface.withValues(alpha: 0.2),
+          ),
+          const SizedBox(height: 14),
           Text(
-            'No synced songs starting with "$letter"',
+            'No songs found for "$letter"',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: cs.onSurface.withValues(alpha: 0.5),
+                  color: cs.onSurface.withValues(alpha: 0.45),
                 ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            'Try syncing songs first from the Sync Songs page.',
+            'Sync songs first from the Sync Songs page.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: cs.onSurface.withValues(alpha: 0.4),
+                  color: cs.onSurface.withValues(alpha: 0.35),
                 ),
           ),
         ],

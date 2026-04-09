@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../db/database_helper.dart';
 import '../../../db/models/song_list.dart';
-import 'list_detail_screen.dart';
+import 'view_list_songs_screen.dart';
 
-class MyListsScreen extends StatefulWidget {
-  const MyListsScreen({super.key});
+class MySongsListScreen extends StatefulWidget {
+  const MySongsListScreen({super.key});
 
   @override
-  State<MyListsScreen> createState() => _MyListsScreenState();
+  State<MySongsListScreen> createState() => _MySongsListScreenState();
 }
 
-class _MyListsScreenState extends State<MyListsScreen> {
+class _MySongsListScreenState extends State<MySongsListScreen> {
   final DatabaseHelper _db = DatabaseHelper.instance;
   List<SongList> _lists = [];
   bool _isLoading = true;
@@ -151,7 +151,7 @@ class _MyListsScreenState extends State<MyListsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Lists'), elevation: 0),
+      appBar: AppBar(title: const Text('My Songs List'), elevation: 0),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createList,
         icon: const Icon(Icons.add),
@@ -208,7 +208,7 @@ class _MyListsScreenState extends State<MyListsScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              ListDetailScreen(songList: list),
+                              ViewListSongsScreen(songList: list),
                         ),
                       );
                       _loadLists();

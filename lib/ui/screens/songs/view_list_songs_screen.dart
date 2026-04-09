@@ -6,16 +6,16 @@ import '../../../main.dart';
 import 'add_edit_song_screen.dart';
 import 'view_song_screen.dart';
 
-class ListDetailScreen extends StatefulWidget {
+class ViewListSongsScreen extends StatefulWidget {
   final SongList songList;
 
-  const ListDetailScreen({super.key, required this.songList});
+  const ViewListSongsScreen({super.key, required this.songList});
 
   @override
-  State<ListDetailScreen> createState() => _ListDetailScreenState();
+  State<ViewListSongsScreen> createState() => _ViewListSongsScreenState();
 }
 
-class _ListDetailScreenState extends State<ListDetailScreen> {
+class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
   final DatabaseHelper _db = DatabaseHelper.instance;
   List<Song> _songsInList = [];
   bool _isLoading = true;

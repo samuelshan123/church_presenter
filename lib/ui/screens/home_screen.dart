@@ -31,35 +31,30 @@ class HomeScreen extends StatelessWidget {
       _HomeAction(
         icon: Icons.music_note_rounded,
         title: 'Songs',
-        subtitle: 'Build and organize worship sets quickly.',
         color: Colors.purple,
         destinationBuilder: (_) => const SongsScreen(),
       ),
       _HomeAction(
         icon: Icons.menu_book_rounded,
         title: 'Bible',
-        subtitle: 'Open verses instantly while presenting.',
         color: Colors.blue,
         destinationBuilder: (_) => BibleScreen(serverService: serverService),
       ),
       _HomeAction(
         icon: Icons.photo_library_rounded,
-        title: 'Images',
-        subtitle: 'Show photos and media from your library.',
+        title: 'Share Images',
         color: Colors.green,
         destinationBuilder: (_) => ImagesScreen(serverService: serverService),
       ),
       _HomeAction(
         icon: Icons.wallpaper_rounded,
         title: 'Backgrounds',
-        subtitle: 'Prepare stage-ready visuals for every slide.',
         color: Colors.teal,
         destinationBuilder: (_) => const BackgroundsScreen(),
       ),
       _HomeAction(
         icon: Icons.slideshow_rounded,
         title: 'Presenter',
-        subtitle: 'Start presenter service.',
         color: Colors.orange,
         destinationBuilder: (_) =>
             PresenterScreen(serverService: serverService),
@@ -74,6 +69,19 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Church Presenter'),
         centerTitle: true,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colorScheme.primary.withValues(alpha: 0.18),
+                colorScheme.secondary.withValues(alpha: 0.10),
+                colorScheme.surface.withValues(alpha: 0.0),
+              ],
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -132,16 +140,12 @@ class HomeScreen extends StatelessWidget {
                       ? 4
                       : width >= 760
                       ? 3
-                      : width >= 380
-                      ? 2
-                      : 1;
+                      : 2; // always at least 2 columns
                   final childAspectRatio = width >= 1100
                       ? 1.18
                       : width >= 760
                       ? 1.02
-                      : width >= 380
-                      ? 0.96
-                      : 1.85;
+                      : 0.96;
 
                   return CustomScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -170,7 +174,6 @@ class HomeScreen extends StatelessWidget {
                             return GridCardWidget(
                               icon: action.icon,
                               title: action.title,
-                              subtitle: action.subtitle,
                               iconColor: action.color,
                               compact: isSmallScreen,
                               onTap: () {
@@ -207,14 +210,12 @@ class HomeScreen extends StatelessWidget {
 class _HomeAction {
   final IconData icon;
   final String title;
-  final String subtitle;
   final Color color;
   final WidgetBuilder destinationBuilder;
 
   const _HomeAction({
     required this.icon,
     required this.title,
-    required this.subtitle,
     required this.color,
     required this.destinationBuilder,
   });

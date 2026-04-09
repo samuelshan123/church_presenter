@@ -336,6 +336,54 @@ class DatabaseHelper {
     await batch.commit(noResult: true);
   }
 
+  /// Returns only remote_id + title for songs starting with [letter].
+  /// Much lighter than loading full lyrics — use this for list views.
+  /// Optionally pass [search] to do a SQL-level title filter.
+  Future<List<({String remoteId, String title})>>
+      getSyncedSongTitlesByFirstLetter(
+    String letter, {
+    String? search,
+  }) async {
+    final db = await database;
+    late final List<Map<String, dynamic>> rows;
+    if (search != null && search.isNotEmpty) {
+      rows = await db.query(
+        'sync_song_detail',
+        columns: ['remote_id', 'title'],
+        where: 'title LIKE ? AND LOWER(title) LIKE ?',
+        whereArgs: ['$letter%', '%${search.toLowerCase()}%'],
+        orderBy: 'title ASC',
+      );
+    } else {
+      rows = await db.query(
+        'sync_song_detail',
+        columns: ['remote_id', 'title'],
+        where: 'title LIKE ?',
+        whereArgs: ['$letter%'],
+        orderBy: 'title ASC',
+      );
+    }
+    return rows
+        .map((r) => (
+              remoteId: r['remote_id'] as String,
+              title: r['title'] as String,
+            ))
+        .toList();
+  }
+
+  /// Fetches a single full song detail record by its remote ID.
+  /// Returns null if the song is not yet synced.
+  Future<SyncSongDetail?> getSyncedSongDetailById(String remoteId) async {
+    final db = await database;
+    final rows = await db.query(
+      'sync_song_detail',
+      where: 'remote_id = ?',
+      whereArgs: [remoteId],
+    );
+    if (rows.isEmpty) return null;
+    return SyncSongDetail.fromMap(rows.first);
+  }
+
   /// Returns detail records whose title starts with [letter].
   Future<List<SyncSongDetail>> getSyncedSongsByFirstLetter(
     String letter,

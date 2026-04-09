@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'all_songs_screen.dart';
-import 'my_lists_screen.dart';
-import 'sync_songs_screen.dart';
+import 'browse_songs_screen.dart';
+import 'my_songs_list_screen.dart';
+import 'song_sync_page.dart';
 import 'web/web_search_screen.dart';
 
 class SongsScreen extends StatelessWidget {
@@ -25,7 +25,7 @@ class SongsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const AllSongsScreen(),
+                    builder: (context) => const BrowseSongsScreen(),
                   ),
                 );
               },
@@ -34,14 +34,14 @@ class SongsScreen extends StatelessWidget {
             _buildMenuCard(
               context,
               icon: Icons.playlist_play,
-              title: 'My Lists',
+              title: 'My Songs List',
               subtitle: 'Organize songs into custom lists',
               color: Colors.blue,
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const MyListsScreen(),
+                    builder: (context) => const MySongsListScreen(),
                   ),
                 );
               },
