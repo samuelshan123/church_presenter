@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'controllers/song_sync_controller.dart';
 import 'services/theme_service.dart';
 import 'services/server_service.dart';
 import 'services/presenter_config_service.dart';
@@ -13,6 +14,7 @@ import 'ui/screens/home_screen.dart';
 final PresenterConfigService globalPresenterConfig = PresenterConfigService();
 final BackgroundService globalBackgroundService = BackgroundService();
 final ImageService globalImageService = ImageService();
+final SongSyncController globalSongSyncController = SongSyncController();
 final ServerService globalServerService = ServerService(
   presenterConfig: globalPresenterConfig,
   backgroundService: globalBackgroundService,
@@ -77,6 +79,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: globalBackgroundService),
         ChangeNotifierProvider.value(value: globalPresenterConfig),
         ChangeNotifierProvider.value(value: globalImageService),
+        ChangeNotifierProvider.value(value: globalSongSyncController),
       ],
       child: MaterialApp(
         title: 'Church Presenter',

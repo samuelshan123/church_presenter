@@ -3,18 +3,13 @@ import 'package:provider/provider.dart';
 
 import '../../../controllers/song_sync_controller.dart';
 
-/// Entry point: wrap this widget with a [ChangeNotifierProvider] before
-/// pushing it, or use [SongSyncPage.route()] which does that automatically.
-class SongSyncPage extends StatelessWidget {
-  const SongSyncPage({super.key});
+/// Push via [SongSyncScreen.route()]. The controller is provided globally from
+/// main.dart so it survives back-navigation and ongoing syncs don't crash.
+class SongSyncScreen extends StatelessWidget {
+  const SongSyncScreen({super.key});
 
-  /// Convenience factory — returns a [MaterialPageRoute] that provides the
-  /// controller locally so callers don't need a global provider setup.
   static Route<void> route() => MaterialPageRoute<void>(
-        builder: (_) => ChangeNotifierProvider(
-          create: (_) => SongSyncController(),
-          child: const SongSyncPage(),
-        ),
+        builder: (_) => const SongSyncScreen(),
       );
 
   @override
@@ -55,19 +50,24 @@ class _SongSyncViewState extends State<_SongSyncView> {
         title: const Text('Sync Songs'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          final hPad = w < 360 ? 12.0 : 20.0;
+          final vSpc = w < 360 ? 12.0 : 16.0;
+          return SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Status card ──────────────────────────────────────────────
             _StatusCard(ctrl: ctrl),
-            const SizedBox(height: 16),
+            SizedBox(height: vSpc),
 
             // ── Stats grid ───────────────────────────────────────────────
             if (ctrl.status != SyncStatus.idle) ...[
               _StatsGrid(stats: ctrl.stats),
-              const SizedBox(height: 16),
+              SizedBox(height: vSpc),
             ],
 
             // ── Progress bar (while syncing) ─────────────────────────────
@@ -77,13 +77,13 @@ class _SongSyncViewState extends State<_SongSyncView> {
                 fetched: ctrl.stats.fetchedBuckets,
                 total: ctrl.stats.totalBuckets,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: vSpc),
             ],
 
             // ── Error box ────────────────────────────────────────────────
             if (ctrl.errorMessage != null) ...[
               _ErrorBox(message: ctrl.errorMessage!),
-              const SizedBox(height: 16),
+              SizedBox(height: vSpc),
             ],
 
             // ── Success banner ───────────────────────────────────────────
@@ -92,7 +92,7 @@ class _SongSyncViewState extends State<_SongSyncView> {
                 insertedSongs: ctrl.stats.insertedSongs,
                 localCount: ctrl.stats.localCount,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: vSpc),
             ],
 
             // ── Last synced timestamp ────────────────────────────────────
@@ -121,6 +121,8 @@ class _SongSyncViewState extends State<_SongSyncView> {
             ),
           ],
         ),
+      );
+        },
       ),
     );
   }
@@ -164,28 +166,33 @@ class _StatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final color = _colorFor(ctrl.status, cs);
+    final w = MediaQuery.of(context).size.width;
+    final double iconSz = w < 360 ? 22 : 28;
+    final double textSz = w < 360 ? 13 : (w > 600 ? 17 : 15);
+    final double pad = w < 360 ? 14 : 20;
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(pad),
         child: Row(
           children: [
             ctrl.isSyncing
                 ? SizedBox.square(
-                    dimension: 28,
+                    dimension: iconSz,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
                       color: cs.primary,
                     ),
                   )
-                : Icon(_iconFor(ctrl.status), size: 28, color: color),
-            const SizedBox(width: 16),
+                : Icon(_iconFor(ctrl.status), size: iconSz, color: color),
+            SizedBox(width: w < 360 ? 10 : 16),
             Expanded(
               child: Text(
                 ctrl.statusMessage,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: color,
                       fontWeight: FontWeight.w500,
+                      fontSize: textSz,
                     ),
               ),
             ),
@@ -211,30 +218,41 @@ class _StatsGrid extends StatelessWidget {
       _StatItem('Inserted', stats.insertedSongs, Icons.playlist_add),
     ];
 
-    return GridView.count(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      crossAxisCount: 3,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.15,
-      children: items
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final cols = w < 340 ? 2 : 3;
+        final ratio = w < 340 ? 1.5 : (w > 600 ? 1.0 : 1.15);
+        final double iconSz = w < 360 ? 16 : (w > 600 ? 26 : 20);
+        final double valSz = w < 360 ? 13 : (w > 600 ? 19 : 15);
+        final double lblSz = w < 360 ? 9 : (w > 600 ? 13 : 11);
+        final double vPad = w < 360 ? 8 : 12;
+        final double hPad = w < 360 ? 4 : 8;
+        return GridView.count(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          crossAxisCount: cols,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: ratio,
+          children: items
           .map(
             (item) => Card(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding: EdgeInsets.symmetric(vertical: vPad, horizontal: hPad),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(item.icon,
-                        size: 20,
+                        size: iconSz,
                         color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(height: 6),
+                    SizedBox(height: w < 360 ? 4 : 6),
                     Text(
                       '${item.value}',
                       style:
                           Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                fontSize: valSz,
                               ),
                     ),
                     const SizedBox(height: 2),
@@ -247,6 +265,7 @@ class _StatsGrid extends StatelessWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurfaceVariant,
+                            fontSize: lblSz,
                           ),
                     ),
                   ],
@@ -255,6 +274,8 @@ class _StatsGrid extends StatelessWidget {
             ),
           )
           .toList(),
+        );
+      },
     );
   }
 }
@@ -274,6 +295,8 @@ class _BucketProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = total == 0 ? 0.0 : fetched / total;
+    final w = MediaQuery.of(context).size.width;
+    final double lblSz = w < 360 ? 10 : (w > 600 ? 14 : 12);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -282,14 +305,14 @@ class _BucketProgressBar extends StatelessWidget {
           children: [
             Text(
               'Buckets downloaded',
-              style: Theme.of(context).textTheme.labelMedium,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(fontSize: lblSz),
             ),
             Text(
               '$fetched / $total',
               style: Theme.of(context)
                   .textTheme
                   .labelMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+                  ?.copyWith(fontWeight: FontWeight.bold, fontSize: lblSz),
             ),
           ],
         ),
@@ -378,27 +401,45 @@ class _LastSyncedRow extends StatelessWidget {
   final DateTime? lastSyncedAt;
 
   String _format(DateTime dt) {
-    final d = dt.toLocal();
-    final date =
-        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-    final hour = d.hour.toString().padLeft(2, '0');
-    final min = d.minute.toString().padLeft(2, '0');
-    return '$date at $hour:$min';
+    final now = DateTime.now();
+    final local = dt.toLocal();
+    final today = DateTime(now.year, now.month, now.day);
+    final date = DateTime(local.year, local.month, local.day);
+    final diff = today.difference(date).inDays;
+
+    final hour = local.hour;
+    final min = local.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final h = (hour % 12 == 0 ? 12 : hour % 12);
+    final timeStr = '$h:$min $period';
+
+    if (diff == 0) return 'Today at $timeStr';
+    if (diff == 1) return 'Yesterday at $timeStr';
+    if (diff < 7) return '$diff days ago at $timeStr';
+    final d =
+        '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year}';
+    return '$d at $timeStr';
   }
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final double sz = w < 360 ? 10 : (w > 600 ? 14 : 12);
+    final double iconSz = w < 360 ? 15 : 18;
     return Row(
       children: [
-        const Icon(Icons.history, size: 18),
+        Icon(Icons.history, size: iconSz),
         const SizedBox(width: 8),
-        Text(
-          lastSyncedAt == null
-              ? 'Never synced'
-              : 'Last synced: ${_format(lastSyncedAt!)}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+        Expanded(
+          child: Text(
+            lastSyncedAt == null
+                ? 'Never synced'
+                : 'Last synced: ${_format(lastSyncedAt!)}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: sz,
+                ),
+          ),
         ),
       ],
     );

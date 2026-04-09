@@ -30,8 +30,8 @@ class GridCardWidget extends StatelessWidget {
     final double iconBoxSize = compact ? 52 : 60;
 
     final TextStyle? titleStyle = (compact
-            ? theme.textTheme.titleMedium
-            : theme.textTheme.titleLarge)
+            ? theme.textTheme.bodyMedium
+            : theme.textTheme.bodyLarge)
         ?.copyWith(
           fontWeight: FontWeight.w700,
           height: 1.15,

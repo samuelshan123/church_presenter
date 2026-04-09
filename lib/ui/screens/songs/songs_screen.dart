@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'browse_songs_screen.dart';
 import 'my_songs_list_screen.dart';
-import 'song_sync_page.dart';
+import 'song_sync_screen.dart';
 import 'web/web_search_screen.dart';
 
 class SongsScreen extends StatelessWidget {
@@ -69,7 +69,7 @@ class SongsScreen extends StatelessWidget {
               title: 'Sync Songs',
               subtitle: 'Download and sync Tamil songs from the CDN',
               color: Colors.indigo,
-              onTap: () => Navigator.push(context, SongSyncPage.route()),
+              onTap: () => Navigator.push(context, SongSyncScreen.route()),
             ),
           ],
         ),
