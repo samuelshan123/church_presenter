@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'all_songs_screen.dart';
+import 'browse_by_letter_screen.dart';
 import 'my_lists_screen.dart';
+import 'sync_songs_screen.dart';
 import 'web/web_search_screen.dart';
 
 class SongsScreen extends StatelessWidget {
@@ -57,6 +59,31 @@ class SongsScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const WebSearchScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildMenuCard(
+              context,
+              icon: Icons.sync,
+              title: 'Sync Songs',
+              subtitle: 'Download and sync Tamil songs from the CDN',
+              color: Colors.indigo,
+              onTap: () => Navigator.push(context, SongSyncPage.route()),
+            ),
+            const SizedBox(height: 16),
+            _buildMenuCard(
+              context,
+              icon: Icons.sort_by_alpha,
+              title: 'Browse by Letter',
+              subtitle: 'Find synced Tamil songs by first letter',
+              color: Colors.orange,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BrowseByLetterScreen(),
                   ),
                 );
               },
