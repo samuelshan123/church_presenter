@@ -6,17 +6,17 @@ import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
 import '../../widgets/presenter_settings_panel.dart';
 
-class SongDetailScreen extends StatefulWidget {
+class ViewSongScreen extends StatefulWidget {
   final Song song;
   final ServerService? serverService;
 
-  const SongDetailScreen({super.key, required this.song, this.serverService});
+  const ViewSongScreen({super.key, required this.song, this.serverService});
 
   @override
-  State<SongDetailScreen> createState() => _SongDetailScreenState();
+  State<ViewSongScreen> createState() => _ViewSongScreenState();
 }
 
-class _SongDetailScreenState extends State<SongDetailScreen> {
+class _ViewSongScreenState extends State<ViewSongScreen> {
   int? _selectedSectionIndex;
   List<String> _sections = [];
 
@@ -26,24 +26,20 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     _parseSections();
   }
 
-  void _parseSections() {
-    // Split content by double newlines (paragraphs/sections)
-    final content = widget.song.content.trim();
-    _sections = content
-        .split('\n\n')
-        .where((section) => section.trim().isNotEmpty)
-        .map((section) => section.trim())
-        .toList();
+void _parseSections() {
+  final content = widget.song.content
+      .replaceAll('\r\n', '\n')
+      .replaceAll('\r', '\n')
+      .trim();
 
-    // If no double newlines, split by single newlines
-    if (_sections.length <= 1) {
-      _sections = content
-          .split('\n')
-          .where((line) => line.trim().isNotEmpty)
-          .map((line) => line.trim())
-          .toList();
-    }
-  }
+  // debugPrint(content);
+
+  _sections = content
+      .split(RegExp(r'\n\s*\n'))
+      .where((section) => section.trim().isNotEmpty)
+      .map((section) => section.trim())
+      .toList();
+}
 
   void _selectSection(int index) {
     setState(() {
