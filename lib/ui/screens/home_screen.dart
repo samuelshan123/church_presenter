@@ -141,12 +141,13 @@ class HomeScreen extends StatelessWidget {
                       : width >= 760
                       ? 3
                       : 2; // always at least 2 columns
-                  // final childAspectRatio = width >= 1100
-                  //     ? 1.18
-                  //     : width >= 760
-                  //     ? 1.02
-                  //     : 0.96;
-
+                  final childAspectRatio = width >= 1100
+                      ? 1.18
+                      : width >= 760
+                      ? 1.02
+                      : width >= 430
+                      ? 1.0
+                      : 0.92;
                   return CustomScrollView(
                     physics: const BouncingScrollPhysics(),
                     slivers: [
@@ -191,7 +192,7 @@ class HomeScreen extends StatelessWidget {
                                 crossAxisCount: crossAxisCount,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
-                                childAspectRatio: 1.1,
+                                childAspectRatio: childAspectRatio,
                               ),
                         ),
                       ),
