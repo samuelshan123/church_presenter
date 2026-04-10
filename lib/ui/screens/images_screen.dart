@@ -43,7 +43,7 @@ class ImagesScreen extends StatelessWidget {
   void _clearPresentation(BuildContext context) {
     final imageService = context.read<ImageService>();
     imageService.clearCurrentImage();
-    serverService.sendMessage('Welcome', 'text', null);
+    serverService.sendMessage('', 'text', null);
 
     ScaffoldMessenger.of(
       context,

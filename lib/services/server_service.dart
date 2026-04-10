@@ -58,7 +58,7 @@ class ServerService extends ChangeNotifier {
           'config': presenterConfig.getConfig(),
           'background': backgroundService.getBackgroundConfig(),
           'type': 'text',
-          'content': _currentMessage ?? 'Welcome',
+          'content': _currentMessage ?? '',
           'metadata': {},
         };
         socket.sink.add(jsonEncode(initialPayload));
