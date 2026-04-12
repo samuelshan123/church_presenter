@@ -96,6 +96,9 @@ class SongSyncController extends ChangeNotifier {
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
 
+  bool _cancelRequested = false;
+  bool get cancelRequested => _cancelRequested;
+
   // ---------------------------------------------------------------------------
   // Initialisation
   // ---------------------------------------------------------------------------
@@ -117,12 +120,22 @@ class SongSyncController extends ChangeNotifier {
   ///
   /// All heavy DB work is performed inside sqflite's own thread pool;
   /// HTTP calls are async and non-blocking — the UI stays responsive.
+  /// Requests cancellation of an in-progress sync.
+  void cancelSync() {
+    if (_isSyncing) {
+      _cancelRequested = true;
+      notifyListeners();
+    }
+  }
+
   Future<void> syncSongs() async {
     if (_isSyncing) return;
 
     _isSyncing = true;
+    _cancelRequested = false;
     _errorMessage = null;
-    _stats = const SyncStats();
+    // Preserve localCount so the UI keeps showing the previous value.
+    _stats = SyncStats(localCount: _stats.localCount);
     notifyListeners();
 
     try {
@@ -192,6 +205,9 @@ class SongSyncController extends ChangeNotifier {
         // ----------------------------------------------------------------
         int inserted = 0;
         for (int i = 0; i < buckets.length; i++) {
+          if (_cancelRequested) {
+            throw _SyncCancelledException();
+          }
           final bucket = buckets[i];
           _update(
             SyncStatus.fetchingBucket,
@@ -199,6 +215,7 @@ class SongSyncController extends ChangeNotifier {
           );
 
           final bucketMap = await _service.fetchBucket(bucket);
+          if (_cancelRequested) throw _SyncCancelledException();
           final details = _service.extractDetailsFromBucket(
             bucketMap,
             bucketToRecords[bucket] ?? [],
@@ -233,12 +250,16 @@ class SongSyncController extends ChangeNotifier {
 
       _update(SyncStatus.completed, 'Sync completed successfully!');
       debugPrint('[SongSync] ✓ Sync finished. Total local songs: $finalCount');
+    } on _SyncCancelledException {
+      _update(SyncStatus.idle, 'Sync cancelled.');
+      debugPrint('[SongSync] Sync was cancelled by user.');
     } catch (e, st) {
       _errorMessage = e.toString();
       _update(SyncStatus.failed, 'Sync failed.');
       debugPrint('[SongSync] ✗ Error: $e\n$st');
     } finally {
       _isSyncing = false;
+      _cancelRequested = false;
       notifyListeners();
     }
   }
@@ -259,3 +280,6 @@ class SongSyncController extends ChangeNotifier {
     super.dispose();
   }
 }
+
+// Private sentinel thrown to exit the sync loop on cancellation.
+class _SyncCancelledException implements Exception {}

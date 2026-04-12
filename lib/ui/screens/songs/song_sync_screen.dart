@@ -65,7 +65,8 @@ class _SongSyncViewState extends State<_SongSyncView> {
             SizedBox(height: vSpc),
 
             // ── Stats grid ───────────────────────────────────────────────
-            if (ctrl.status != SyncStatus.idle) ...[
+            if (ctrl.status != SyncStatus.idle ||
+                ctrl.stats.localCount > 0) ...[
               _StatsGrid(stats: ctrl.stats),
               SizedBox(height: vSpc),
             ],
@@ -99,7 +100,27 @@ class _SongSyncViewState extends State<_SongSyncView> {
             _LastSyncedRow(lastSyncedAt: ctrl.lastSyncedAt),
             const SizedBox(height: 24),
 
-            // ── Sync button ───────────────────────────────────────────────
+            // ── Sync / Cancel buttons ─────────────────────────────────────
+            if (ctrl.isSyncing)
+              OutlinedButton.icon(
+                onPressed: ctrl.cancelRequested ? null : ctrl.cancelSync,
+                icon: ctrl.cancelRequested
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cancel_outlined),
+                label: Text(
+                    ctrl.cancelRequested ? 'Cancelling…' : 'Cancel Sync'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                  foregroundColor: colorScheme.error,
+                  side: BorderSide(color: colorScheme.error),
+                ),
+              ),
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: ctrl.isSyncing ? null : ctrl.syncSongs,
               icon: ctrl.isSyncing
