@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -60,7 +60,7 @@ class DatabaseHelper {
         id $idType,
         listId $integerType,
         songId $integerType,
-        \`order\` INTEGER DEFAULT 0,
+        `order` INTEGER DEFAULT 0,
         FOREIGN KEY (listId) REFERENCES song_lists (id) ON DELETE CASCADE,
         FOREIGN KEY (songId) REFERENCES songs (id) ON DELETE CASCADE
       )
@@ -74,12 +74,23 @@ class DatabaseHelper {
 
     // Sync tables (version 2)
     await _createSyncTables(db);
+
+    // Bible verse history (version 3)
+    await _createBibleHistoryTable(db);
   }
 
   /// Called when an existing database is opened with a higher version number.
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createSyncTables(db);
+    }
+    if (oldVersion < 3) {
+      await _createBibleHistoryTable(db);
+    }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE bible_verse_history ADD COLUMN verseText TEXT',
+      );
     }
   }
 
@@ -200,7 +211,7 @@ class DatabaseHelper {
 
     // Get the max order for this list
     final result = await db.rawQuery(
-      'SELECT MAX(\`order\`) as maxOrder FROM list_songs WHERE listId = ?',
+      'SELECT MAX(`order`) as maxOrder FROM list_songs WHERE listId = ?',
       [listId],
     );
 
@@ -229,7 +240,7 @@ class DatabaseHelper {
       SELECT songs.* FROM songs
       INNER JOIN list_songs ON songs.id = list_songs.songId
       WHERE list_songs.listId = ?
-      ORDER BY list_songs.\`order\` ASC
+      ORDER BY list_songs.`order` ASC
     ''',
       [listId],
     );
@@ -245,6 +256,58 @@ class DatabaseHelper {
       whereArgs: [listId, songId],
     );
     return result.isNotEmpty;
+  }
+
+  Future<void> _createBibleHistoryTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS bible_verse_history (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        bookEnglish TEXT NOT NULL,
+        bookTamil   TEXT NOT NULL,
+        chapter     INTEGER NOT NULL,
+        verseNumber INTEGER NOT NULL,
+        verseText   TEXT,
+        timestamp   TEXT NOT NULL
+      )
+    ''');
+  }
+
+  // ==================== BIBLE HISTORY ====================
+
+  Future<void> insertBibleHistory({
+    required String bookEnglish,
+    required String bookTamil,
+    required int chapter,
+    required int verseNumber,
+    required String verseText,
+  }) async {
+    final db = await database;
+    // Avoid consecutive duplicate
+    final last = await db.query(
+      'bible_verse_history',
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    if (last.isNotEmpty &&
+        last.first['bookEnglish'] == bookEnglish &&
+        last.first['chapter'] == chapter &&
+        last.first['verseNumber'] == verseNumber) {
+      return;
+    }
+    await db.insert('bible_verse_history', {
+      'bookEnglish': bookEnglish,
+      'bookTamil': bookTamil,
+      'chapter': chapter,
+      'verseNumber': verseNumber,
+      'verseText': verseText,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Returns all history rows ordered most-recent first.
+  Future<List<Map<String, dynamic>>> getBibleHistory() async {
+    final db = await database;
+    return db.query('bible_verse_history', orderBy: 'id DESC');
   }
 
   Future<void> close() async {
@@ -269,11 +332,10 @@ class DatabaseHelper {
   /// Persists the last-synced timestamp.
   Future<void> saveLastSyncedAt(DateTime dt) async {
     final db = await database;
-    await db.insert(
-      'sync_meta',
-      {'key': 'last_synced_at', 'value': dt.toIso8601String()},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sync_meta', {
+      'key': 'last_synced_at',
+      'value': dt.toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // ==================== SYNC SONG INDEX ====================
@@ -311,8 +373,9 @@ class DatabaseHelper {
   /// Returns the count of fully-synced song detail records.
   Future<int> getSyncedSongCount() async {
     final db = await database;
-    final result = await db
-        .rawQuery('SELECT COUNT(*) AS cnt FROM sync_song_detail');
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM sync_song_detail',
+    );
     return (result.first['cnt'] as int?) ?? 0;
   }
 
@@ -340,10 +403,7 @@ class DatabaseHelper {
   /// Much lighter than loading full lyrics — use this for list views.
   /// Optionally pass [search] to do a SQL-level title filter.
   Future<List<({String remoteId, String title})>>
-      getSyncedSongTitlesByFirstLetter(
-    String letter, {
-    String? search,
-  }) async {
+  getSyncedSongTitlesByFirstLetter(String letter, {String? search}) async {
     final db = await database;
     late final List<Map<String, dynamic>> rows;
     if (search != null && search.isNotEmpty) {
@@ -364,10 +424,10 @@ class DatabaseHelper {
       );
     }
     return rows
-        .map((r) => (
-              remoteId: r['remote_id'] as String,
-              title: r['title'] as String,
-            ))
+        .map(
+          (r) =>
+              (remoteId: r['remote_id'] as String, title: r['title'] as String),
+        )
         .toList();
   }
 

@@ -1,8 +1,10 @@
+import 'package:church_presenter/main.dart';
 import 'package:church_presenter/ui/screens/bible/bible_chapter_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../services/bible_service.dart';
 import '../../../services/server_service.dart';
 import '../../../db/models/bible_book.dart';
+import '../../widgets/presenter_settings_panel.dart';
 
 class BibleScreen extends StatefulWidget {
   final ServerService? serverService;
@@ -62,7 +64,20 @@ class _BibleScreenState extends State<BibleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Bible'), elevation: 0),
+      appBar: AppBar(
+        title: const Text('Bible'),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune),
+            tooltip: 'Presenter Settings',
+            onPressed: () => showPresenterSettingsDialog(
+              context,
+              globalPresenterConfig,
+            ),
+          ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

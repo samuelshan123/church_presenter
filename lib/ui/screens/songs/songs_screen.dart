@@ -35,7 +35,7 @@ class SongsScreen extends StatelessWidget {
               context,
               icon: Icons.playlist_play,
               title: 'My Songs List',
-              subtitle: 'Organize songs into custom lists',
+              subtitle: 'Add custom songs',
               color: Colors.blue,
               onTap: () {
                 Navigator.push(
