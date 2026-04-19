@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import '../../services/image_service.dart';
 import '../../services/server_service.dart';
 
-class ImagesScreen extends StatelessWidget {
+class PresentImagesScreen extends StatelessWidget {
   final ServerService serverService;
 
-  const ImagesScreen({super.key, required this.serverService});
+  const PresentImagesScreen({super.key, required this.serverService});
 
   Future<void> _pickImage(BuildContext context) async {
     final picker = ImagePicker();
