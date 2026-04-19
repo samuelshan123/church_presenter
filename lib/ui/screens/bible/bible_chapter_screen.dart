@@ -5,6 +5,7 @@ import 'package:church_presenter/main.dart';
 import 'package:church_presenter/services/bible_service.dart';
 import 'package:church_presenter/services/server_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
 import '../../widgets/presenter_settings_panel.dart';
@@ -287,16 +288,72 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
     await _loadHistory();
   }
 
-  void _scrollToIndex(int index) {
-    if (index < 0 || index >= _verseKeys.length) return;
+  Future<void> _scrollToIndex(int index, {int retryCount = 0}) async {
+    if (!mounted || index < 0 || index >= _verseKeys.length) return;
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    if (!_scrollController.hasClients) {
+      _retryScrollToIndex(index, retryCount);
+      return;
+    }
+
     final ctx = _verseKeys[index].currentContext;
-    if (ctx == null) return;
-    Scrollable.ensureVisible(
-      ctx,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      alignment: 0.1,
+    final renderObject = ctx?.findRenderObject();
+    if (renderObject == null) {
+      _retryScrollToIndex(index, retryCount);
+      return;
+    }
+
+    final viewport = RenderAbstractViewport.of(renderObject);
+    final position = _scrollController.position;
+    final revealOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
+    final targetOffset = (revealOffset - 24).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
     );
+
+    final delta = (position.pixels - targetOffset).abs();
+    if (delta > 1) {
+      await _scrollController.animateTo(
+        targetOffset.toDouble(),
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    }
+
+    if (_isVerseOutOfView(index) && retryCount < 6) {
+      _retryScrollToIndex(index, retryCount);
+    }
+  }
+
+  void _retryScrollToIndex(int index, int retryCount) {
+    if (retryCount >= 6) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToIndex(index, retryCount: retryCount + 1);
+    });
+  }
+
+  bool _isVerseOutOfView(int index) {
+    if (!_scrollController.hasClients ||
+        index < 0 ||
+        index >= _verseKeys.length) {
+      return false;
+    }
+
+    final ctx = _verseKeys[index].currentContext;
+    final renderObject = ctx?.findRenderObject();
+    if (renderObject == null) return false;
+
+    final viewport = RenderAbstractViewport.of(renderObject);
+    final position = _scrollController.position;
+    final topOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
+    final bottomOffset = viewport.getOffsetToReveal(renderObject, 1).offset;
+    final visibleTop = position.pixels;
+    final visibleBottom = position.pixels + position.viewportDimension;
+
+    return topOffset < visibleTop || bottomOffset > visibleBottom;
   }
 
   void _showVerseSelector() {
@@ -444,9 +501,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
               },
               child: Text(
                 'Clear All',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
             TextButton(
@@ -641,49 +696,52 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                         _selectedVerseIndex! < _verses.length - 1,
                   ),
                 Expanded(
-                  child: ListView.builder(
+                  child: SingleChildScrollView(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _verses.length,
-                    itemBuilder: (context, index) {
-                      final verse = _verses[index];
-                      final isSelected = _selectedVerseIndex == index;
-                      return GestureDetector(
-                        key: _verseKeys[index],
-                        onTap: () => _selectVerse(index),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.outlineVariant,
-                              width: isSelected ? 3 : 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${verse.verseNumber}. ${verse.verseText}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    height: 1.6,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: List.generate(_verses.length, (index) {
+                          final verse = _verses[index];
+                          final isSelected = _selectedVerseIndex == index;
+                          return GestureDetector(
+                            key: _verseKeys[index],
+                            onTap: () => _selectVerse(index),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.outlineVariant,
+                                  width: isSelected ? 3 : 1.5,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${verse.verseNumber}. ${verse.verseText}',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        height: 1.6,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
                   ),
                 ),
               ],
