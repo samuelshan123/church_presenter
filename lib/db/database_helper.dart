@@ -310,6 +310,11 @@ class DatabaseHelper {
     return db.query('bible_verse_history', orderBy: 'id DESC');
   }
 
+  Future<void> clearBibleHistory() async {
+    final db = await database;
+    await db.delete('bible_verse_history');
+  }
+
   Future<void> close() async {
     final db = await database;
     db.close();

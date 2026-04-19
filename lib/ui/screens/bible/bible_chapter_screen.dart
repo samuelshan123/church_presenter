@@ -29,6 +29,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
   int _currentChapter = 1;
   int _totalChapters = 1;
   List<BibleVerse> _verses = [];
+  List<GlobalKey> _verseKeys = [];
   bool _isLoading = true;
   String? _error;
   List<BibleBook> _allBooks = [];
@@ -96,6 +97,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
       setState(() {
         _totalChapters = totalChapters;
         _verses = verses;
+        _verseKeys = List.generate(verses.length, (_) => GlobalKey());
         _isLoading = false;
         _selectedVerseIndex = targetIndex;
       });
@@ -280,20 +282,20 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
       bookTamil: _currentBook!.tamil,
       chapter: _currentChapter,
       verseNumber: verse.verseNumber,
-      verseText: verse.verseText,
+      verseText: '',
     );
     await _loadHistory();
   }
 
   void _scrollToIndex(int index) {
-    if (!_scrollController.hasClients) return;
-    // Estimate item height ~100px; scroll so item is near the top
-    const estimatedItemHeight = 100.0;
-    final offset = index * estimatedItemHeight;
-    _scrollController.animateTo(
-      offset,
+    if (index < 0 || index >= _verseKeys.length) return;
+    final ctx = _verseKeys[index].currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
+      alignment: 0.1,
     );
   }
 
@@ -414,23 +416,13 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                       ),
                     ),
                     ...entries.map((entry) {
-                      final verseText = entry['verseText'] as String?;
-                      final subtitleText =
-                          verseText != null && verseText.trim().isNotEmpty
-                          ? verseText
-                          : 'Verse preview unavailable. Tap to open.';
-
                       return ListTile(
                         dense: true,
                         title: Text(
                           '${entry['bookTamil']} ${entry['chapter']}:${entry['verseNumber']}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text(
-                          subtitleText,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+
                         onTap: () {
                           Navigator.pop(context);
                           _navigateToHistoryEntry(entry);
@@ -444,6 +436,19 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
             ),
           ),
           actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await DatabaseHelper.instance.clearBibleHistory();
+                await _loadHistory();
+              },
+              child: Text(
+                'Clear All',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Close'),
@@ -644,6 +649,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                       final verse = _verses[index];
                       final isSelected = _selectedVerseIndex == index;
                       return GestureDetector(
+                        key: _verseKeys[index],
                         onTap: () => _selectVerse(index),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
