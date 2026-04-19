@@ -283,7 +283,6 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
       bookTamil: _currentBook!.tamil,
       chapter: _currentChapter,
       verseNumber: verse.verseNumber,
-      verseText: '',
     );
     await _loadHistory();
   }

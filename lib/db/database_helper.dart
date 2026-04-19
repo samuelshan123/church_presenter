@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -75,7 +75,7 @@ class DatabaseHelper {
     // Sync tables (version 2)
     await _createSyncTables(db);
 
-    // Bible verse history (version 3)
+    // Bible verse history (version 3, normalized in version 5)
     await _createBibleHistoryTable(db);
   }
 
@@ -87,10 +87,8 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       await _createBibleHistoryTable(db);
     }
-    if (oldVersion < 4) {
-      await db.execute(
-        'ALTER TABLE bible_verse_history ADD COLUMN verseText TEXT',
-      );
+    if (oldVersion < 5) {
+      await _ensureBibleHistorySchema(db);
     }
   }
 
@@ -275,10 +273,77 @@ class DatabaseHelper {
         bookTamil   TEXT NOT NULL,
         chapter     INTEGER NOT NULL,
         verseNumber INTEGER NOT NULL,
-        verseText   TEXT,
         timestamp   TEXT NOT NULL
       )
     ''');
+  }
+
+  Future<void> _ensureBibleHistorySchema(Database db) async {
+    if (!await _tableExists(db, 'bible_verse_history')) {
+      await _createBibleHistoryTable(db);
+      return;
+    }
+
+    if (!await _hasColumn(db, 'bible_verse_history', 'verseText')) {
+      return;
+    }
+
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE bible_verse_history_new (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          bookEnglish TEXT NOT NULL,
+          bookTamil   TEXT NOT NULL,
+          chapter     INTEGER NOT NULL,
+          verseNumber INTEGER NOT NULL,
+          timestamp   TEXT NOT NULL
+        )
+      ''');
+
+      await txn.execute('''
+        INSERT INTO bible_verse_history_new (
+          id,
+          bookEnglish,
+          bookTamil,
+          chapter,
+          verseNumber,
+          timestamp
+        )
+        SELECT
+          id,
+          bookEnglish,
+          bookTamil,
+          chapter,
+          verseNumber,
+          timestamp
+        FROM bible_verse_history
+      ''');
+
+      await txn.execute('DROP TABLE bible_verse_history');
+      await txn.execute(
+        'ALTER TABLE bible_verse_history_new RENAME TO bible_verse_history',
+      );
+    });
+  }
+
+  Future<bool> _tableExists(Database db, String tableName) async {
+    final result = await db.query(
+      'sqlite_master',
+      columns: ['name'],
+      where: 'type = ? AND name = ?',
+      whereArgs: ['table', tableName],
+      limit: 1,
+    );
+    return result.isNotEmpty;
+  }
+
+  Future<bool> _hasColumn(
+    Database db,
+    String tableName,
+    String columnName,
+  ) async {
+    final result = await db.rawQuery('PRAGMA table_info($tableName)');
+    return result.any((column) => column['name'] == columnName);
   }
 
   // ==================== BIBLE HISTORY ====================
@@ -288,7 +353,6 @@ class DatabaseHelper {
     required String bookTamil,
     required int chapter,
     required int verseNumber,
-    required String verseText,
   }) async {
     final db = await database;
     // Avoid consecutive duplicate
@@ -308,7 +372,6 @@ class DatabaseHelper {
       'bookTamil': bookTamil,
       'chapter': chapter,
       'verseNumber': verseNumber,
-      'verseText': verseText,
       'timestamp': DateTime.now().toIso8601String(),
     });
   }
