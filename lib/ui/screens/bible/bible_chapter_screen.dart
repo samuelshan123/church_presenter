@@ -563,6 +563,53 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
     }
   }
 
+  Widget _buildTopSelector({
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
+          child: Row(
+            children: [
+              Text(
+                '$label: ',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_drop_down),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final serverActive =
@@ -572,7 +619,6 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            // Book selector
             Flexible(
               child: InkWell(
                 onTap: _showBookSelector,
@@ -592,41 +638,6 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            // Chapter selector
-            InkWell(
-              onTap: _showChapterSelector,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$_currentChapter',
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down, size: 24),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Verse selector
-            if (_verses.isNotEmpty)
-              InkWell(
-                onTap: _showVerseSelector,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _selectedVerseIndex != null
-                          ? 'v${_verses[_selectedVerseIndex!].verseNumber}'
-                          : 'v-',
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_drop_down, size: 24),
-                  ],
-                ),
-              ),
           ],
         ),
         elevation: 0,
@@ -679,6 +690,35 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
             )
           : Column(
               children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildTopSelector(
+                        label: 'Chapter',
+                        value: '$_currentChapter',
+                        onTap: _showChapterSelector,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildTopSelector(
+                        label: 'Verse',
+                        value: _selectedVerseIndex != null
+                            ? '${_verses[_selectedVerseIndex!].verseNumber}'
+                            : '-',
+                        onTap: _showVerseSelector,
+                      ),
+                    ],
+                  ),
+                ),
                 if (serverActive)
                   const BroadcastInfoBanner(
                     message: 'Tap any verse to broadcast to connected devices',
