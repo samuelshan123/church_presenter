@@ -206,8 +206,16 @@ class DatabaseHelper {
 
   // ==================== LIST-SONG OPERATIONS ====================
 
-  Future<void> addSongToList(int listId, int songId) async {
+  Future<bool> addSongToList(int listId, int songId) async {
     final db = await database;
+
+    // Prevent duplicate song in the same list
+    final existing = await db.query(
+      'list_songs',
+      where: 'listId = ? AND songId = ?',
+      whereArgs: [listId, songId],
+    );
+    if (existing.isNotEmpty) return false;
 
     // Get the max order for this list
     final result = await db.rawQuery(
@@ -222,6 +230,7 @@ class DatabaseHelper {
       'songId': songId,
       'order': maxOrder + 1,
     });
+    return true;
   }
 
   Future<void> removeSongFromList(int listId, int songId) async {
