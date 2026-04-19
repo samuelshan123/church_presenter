@@ -121,13 +121,33 @@
   </div>
   <script>
     let socket;
+    let reconnectDelay = 1000;
+    const maxReconnectDelay = 30000;
+    let reconnectTimer = null;
+
+    function scheduleReconnect() {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      const jitteredDelay = reconnectDelay * (0.8 + Math.random() * 0.4);
+      console.log(`WebSocket: reconnecting in ${Math.round(jitteredDelay / 1000)}s...`);
+      reconnectTimer = setTimeout(connectWebSocket, jitteredDelay);
+      reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
+    }
 
     function connectWebSocket() {
+      if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       socket = new WebSocket(`${protocol}//${location.host}/api/ws`);
 
       socket.onopen = function () {
         console.log('WebSocket connected');
+        reconnectDelay = 1000;
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
       };
 
       socket.onmessage = function (event) {
@@ -238,15 +258,28 @@
         }
       };
 
-      socket.onclose = function () {
-        console.log('WebSocket disconnected, attempting to reconnect...');
-        setTimeout(connectWebSocket, 3000);
+      socket.onclose = function (event) {
+        console.log(`WebSocket disconnected (code: ${event.code})`);
+        scheduleReconnect();
       };
 
       socket.onerror = function (error) {
         console.error('WebSocket error:', error);
+        // onclose fires after onerror — reconnect handled there
       };
     }
+
+    // Reconnect immediately when the tab becomes visible again
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && (!socket || socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING)) {
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+        reconnectDelay = 1000;
+        connectWebSocket();
+      }
+    });
 
     connectWebSocket();
   </script>
