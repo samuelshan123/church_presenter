@@ -4,9 +4,10 @@ import 'package:church_presenter/db/models/bible_verse.dart';
 import 'package:church_presenter/main.dart';
 import 'package:church_presenter/services/bible_service.dart';
 import 'package:church_presenter/services/server_service.dart';
+import 'package:church_presenter/ui/screens/bible/bible_verse_image_editor_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
@@ -307,9 +308,24 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
     );
   }
 
-  Future<void> _shareVerse(BibleVerse verse) async {
-    await SharePlus.instance.share(
-      ShareParams(text: _formatVerseForSharing(verse)),
+  Future<void> _shareVerseText(BibleVerse verse) async {
+    final verseText = _formatVerseForSharing(verse);
+
+    await SharePlus.instance.share(ShareParams(text: verseText));
+  }
+
+  Future<void> _shareVerseAsImage(BibleVerse verse) async {
+    if (_currentBook == null) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BibleVerseImageEditorScreen(
+          bookName: _currentBook!.tamil,
+          chapter: _currentChapter,
+          verseNumber: verse.verseNumber,
+          verseText: verse.verseText,
+        ),
+      ),
     );
   }
 
@@ -336,10 +352,18 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
               ),
               ListTile(
                 leading: Icon(Icons.share_rounded, color: colorScheme.primary),
-                title: const Text('Share'),
+                title: const Text('Share as Text'),
                 onTap: () async {
                   Navigator.pop(sheetContext);
-                  await _shareVerse(verse);
+                  await _shareVerseText(verse);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.image_rounded, color: colorScheme.primary),
+                title: const Text('Share as Image'),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await _shareVerseAsImage(verse);
                 },
               ),
             ],
@@ -830,11 +854,14 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                                   Expanded(
                                     child: Text(
                                       '${verse.verseNumber}. ${verse.verseText}',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        height: 1.6,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            fontSize: 16,
+                                            height: 1.6,
+                                            fontWeight: FontWeight.w400,
+                                          ),
                                     ),
                                   ),
                                 ],
