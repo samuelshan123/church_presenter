@@ -854,14 +854,11 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                                   Expanded(
                                     child: Text(
                                       '${verse.verseNumber}. ${verse.verseText}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            fontSize: 16,
-                                            height: 1.6,
-                                            fontWeight: FontWeight.w400,
-                                          ),
+                                      style:TextStyle(
+                                        fontSize: 16,
+                                        height: 1.6,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],
