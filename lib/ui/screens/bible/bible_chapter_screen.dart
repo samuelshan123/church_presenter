@@ -5,7 +5,9 @@ import 'package:church_presenter/main.dart';
 import 'package:church_presenter/services/bible_service.dart';
 import 'package:church_presenter/services/server_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../widgets/broadcast_info_banner.dart';
 import '../../widgets/broadcast_control_bar.dart';
 import '../../widgets/presenter_settings_panel.dart';
@@ -285,6 +287,66 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
       verseNumber: verse.verseNumber,
     );
     await _loadHistory();
+  }
+
+  String _formatVerseForSharing(BibleVerse verse) {
+    final reference =
+        '${_currentBook?.tamil ?? _currentBook?.english ?? ''} $_currentChapter:${verse.verseNumber}';
+    return '${verse.verseText}\n($reference)';
+  }
+
+  Future<void> _copyVerse(BibleVerse verse) async {
+    await Clipboard.setData(ClipboardData(text: _formatVerseForSharing(verse)));
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Verse copied'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  Future<void> _shareVerse(BibleVerse verse) async {
+    await SharePlus.instance.share(
+      ShareParams(text: _formatVerseForSharing(verse)),
+    );
+  }
+
+  Future<void> _showVerseActions(BibleVerse verse) async {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.copy_rounded, color: colorScheme.primary),
+                title: const Text('Copy'),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await _copyVerse(verse);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.share_rounded, color: colorScheme.primary),
+                title: const Text('Share'),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await _shareVerse(verse);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _scrollToIndex(int index, {int retryCount = 0}) async {
@@ -746,6 +808,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                           return GestureDetector(
                             key: _verseKeys[index],
                             onTap: () => _selectVerse(index),
+                            onLongPress: () => _showVerseActions(verse),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               margin: const EdgeInsets.only(bottom: 16),
