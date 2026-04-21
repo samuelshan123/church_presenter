@@ -42,18 +42,18 @@ class HomeScreen extends StatelessWidget {
       ),
       _HomeAction(
         icon: Icons.photo_library_rounded,
-        title: 'Share Images',
+        title: 'Present Images',
         color: Colors.green,
         destinationBuilder: (_) => PresentImagesScreen(serverService: serverService),
       ),
       _HomeAction(
         icon: Icons.wallpaper_rounded,
-        title: 'Backgrounds',
+        title: 'Set Background',
         color: Colors.teal,
         destinationBuilder: (_) => const BackgroundsScreen(),
       ),
       _HomeAction(
-        icon: Icons.slideshow_rounded,
+        icon: Icons.present_to_all_rounded,
         title: 'Presenter',
         color: Colors.orange,
         destinationBuilder: (_) =>

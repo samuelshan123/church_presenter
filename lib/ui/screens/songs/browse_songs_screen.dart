@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../db/database_helper.dart';
 import '../../../db/models/song.dart';
 import '../../../main.dart';
+import 'song_sync_screen.dart';
 import 'view_song_screen.dart';
 
 // ---------------------------------------------------------------------------
@@ -35,6 +36,13 @@ class BrowseSongsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('All Songs'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: 'Sync Songs',
+            onPressed: () => Navigator.push(context, SongSyncScreen.route()),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -199,6 +207,13 @@ class _SongsByLetterScreenState extends State<SongsByLetterScreen> {
       appBar: AppBar(
         title: Text('Songs — ${widget.letter}'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: 'Sync Songs',
+            onPressed: () => Navigator.push(context, SongSyncScreen.route()),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -347,6 +362,15 @@ class _EmptyState extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: cs.onSurface.withValues(alpha: 0.35),
                 ),
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              SongSyncScreen.route(),
+            ),
+            icon: const Icon(Icons.sync),
+            label: const Text('Sync Songs'),
           ),
         ],
       ),

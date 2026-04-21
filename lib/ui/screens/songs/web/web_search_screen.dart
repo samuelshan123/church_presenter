@@ -79,7 +79,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Web Search'),
+        title: const Text('Web Search (beta)'),
         elevation: 0,
       ),
       body: Column(

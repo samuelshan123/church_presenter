@@ -19,7 +19,7 @@ class SongsScreen extends StatelessWidget {
               context,
               icon: Icons.music_note,
               title: 'All Songs',
-              subtitle: 'View and manage all your songs',
+              subtitle: 'Browse and select from all available songs',
               color: Colors.purple,
               onTap: () {
                 Navigator.push(
@@ -35,7 +35,7 @@ class SongsScreen extends StatelessWidget {
               context,
               icon: Icons.playlist_play,
               title: 'My Songs List',
-              subtitle: 'Add custom songs',
+              subtitle: 'Add custom songs to your personal list',
               color: Colors.blue,
               onTap: () {
                 Navigator.push(
@@ -50,7 +50,7 @@ class SongsScreen extends StatelessWidget {
             _buildMenuCard(
               context,
               icon: Icons.language,
-              title: 'Web Search',
+              title: 'Web Search (beta)',
               subtitle: 'Search and import Tamil Christian songs from the web',
               color: Colors.teal,
               onTap: () {
