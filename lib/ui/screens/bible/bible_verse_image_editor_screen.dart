@@ -78,7 +78,7 @@ class _BibleVerseImageEditorScreenState
   ];
 
   String get _referenceText =>
-      '(${widget.bookName} ${widget.chapter}:${widget.verseNumber})';
+      '${widget.bookName} ${widget.chapter}:${widget.verseNumber}';
 
   @override
   void initState() {
@@ -326,9 +326,9 @@ class _BibleVerseImageEditorScreenState
                                   wordSpacing: _referenceWordSpacing,
                                   shadows: const [
                                     Shadow(
-                                      blurRadius: 10,
+                                      blurRadius: 4,
                                       color: Colors.black54,
-                                      offset: Offset(0, 2),
+                                      offset: Offset(0, 1),
                                     ),
                                   ],
                                 ),
@@ -388,7 +388,7 @@ class _BibleVerseImageEditorScreenState
           fontWeight: FontWeight.w700,
           wordSpacing: _verseWordSpacing,
           shadows: const [
-            Shadow(blurRadius: 14, color: Colors.black87, offset: Offset(0, 3)),
+            Shadow(blurRadius: 4, color: Colors.black87, offset: Offset(0, 1)),
           ],
         ),
       ),
