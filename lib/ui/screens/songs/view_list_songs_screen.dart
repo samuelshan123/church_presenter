@@ -20,6 +20,11 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
   List<Song> _songsInList = [];
   bool _isLoading = true;
 
+  static const BoxConstraints _compactActionConstraints = BoxConstraints(
+    minWidth: 32,
+    minHeight: 32,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -34,8 +39,6 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
       _isLoading = false;
     });
   }
-
-
 
   Future<void> _deleteSong(Song song) async {
     final confirm = await showDialog<bool>(
@@ -68,6 +71,24 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
     }
   }
 
+  Widget _buildCompactActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return IconButton(
+      constraints: _compactActionConstraints,
+      padding: EdgeInsets.zero,
+      splashRadius: 18,
+      visualDensity: VisualDensity.compact,
+      icon: Icon(icon, size: 18),
+      color: color,
+      tooltip: tooltip,
+      onPressed: onPressed,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +97,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon:  const Icon(Icons.add),
+            icon: const Icon(Icons.add),
             tooltip: 'Create New Song',
             onPressed: () async {
               await Navigator.push(
@@ -103,7 +124,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                     size: 80,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.3),
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -111,7 +132,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -120,7 +141,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -175,9 +196,10 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
+                          _buildCompactActionButton(
+                            icon: Icons.edit,
                             color: Colors.blue,
+                            tooltip: 'Edit song',
                             onPressed: () async {
                               await Navigator.push(
                                 context,
@@ -189,9 +211,10 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                               _loadSongs();
                             },
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
+                          _buildCompactActionButton(
+                            icon: Icons.delete,
                             color: Colors.red,
+                            tooltip: 'Delete song',
                             onPressed: () => _deleteSong(song),
                           ),
                         ],

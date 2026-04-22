@@ -31,6 +31,9 @@ enum _EditableLayer { verse, reference }
 
 class _BibleVerseImageEditorScreenState
     extends State<BibleVerseImageEditorScreen> {
+  static const Duration _selectionAnimationDuration = Duration(
+    milliseconds: 160,
+  );
   final GlobalKey _canvasKey = GlobalKey();
   final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _verseController = TextEditingController();
@@ -106,6 +109,9 @@ class _BibleVerseImageEditorScreenState
 
   TextAlign get _activeTextAlign =>
       _isEditingVerse ? _verseTextAlign : _referenceTextAlign;
+
+  Duration get _selectionFrameDuration =>
+      _showSelectionOutline ? _selectionAnimationDuration : Duration.zero;
 
   Future<void> _pickBackgroundImage() async {
     final image = await _imagePicker.pickImage(source: ImageSource.gallery);
@@ -313,6 +319,7 @@ class _BibleVerseImageEditorScreenState
                               });
                             },
                             child: _SelectionFrame(
+                              animationDuration: _selectionFrameDuration,
                               isSelected:
                                   _showSelectionOutline &&
                                   _selectedLayer == _EditableLayer.reference,
@@ -326,8 +333,8 @@ class _BibleVerseImageEditorScreenState
                                   wordSpacing: _referenceWordSpacing,
                                   shadows: const [
                                     Shadow(
-                                      blurRadius: 4,
-                                      color: Colors.black54,
+                                      blurRadius: 2,
+                                      color: Colors.black38,
                                       offset: Offset(0, 1),
                                     ),
                                   ],
@@ -375,6 +382,7 @@ class _BibleVerseImageEditorScreenState
 
   Widget _buildVerseLayer() {
     return _SelectionFrame(
+      animationDuration: _selectionFrameDuration,
       expandToMaxWidth: true,
       isSelected:
           _showSelectionOutline && _selectedLayer == _EditableLayer.verse,
@@ -388,7 +396,11 @@ class _BibleVerseImageEditorScreenState
           fontWeight: FontWeight.w700,
           wordSpacing: _verseWordSpacing,
           shadows: const [
-            Shadow(blurRadius: 4, color: Colors.black87, offset: Offset(0, 1)),
+            Shadow(
+              blurRadius: 2.5,
+              color: Colors.black54,
+              offset: Offset(0, 1),
+            ),
           ],
         ),
       ),
@@ -802,17 +814,19 @@ class _SelectionFrame extends StatelessWidget {
   final Widget child;
   final bool isSelected;
   final bool expandToMaxWidth;
+  final Duration animationDuration;
 
   const _SelectionFrame({
     required this.child,
     required this.isSelected,
+    required this.animationDuration,
     this.expandToMaxWidth = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
+      duration: animationDuration,
       width: expandToMaxWidth ? double.infinity : null,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(

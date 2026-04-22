@@ -15,6 +15,11 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
   List<SongList> _lists = [];
   bool _isLoading = true;
 
+  static const BoxConstraints _compactActionConstraints = BoxConstraints(
+    minWidth: 32,
+    minHeight: 32,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -148,6 +153,24 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
     }
   }
 
+  Widget _buildCompactActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return IconButton(
+      constraints: _compactActionConstraints,
+      padding: EdgeInsets.zero,
+      splashRadius: 18,
+      visualDensity: VisualDensity.compact,
+      icon: Icon(icon, size: 18),
+      color: color,
+      tooltip: tooltip,
+      onPressed: onPressed,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -190,14 +213,16 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, size: 18),
+                              _buildCompactActionButton(
+                                icon: Icons.edit,
                                 color: Colors.blue,
+                                tooltip: 'Rename list',
                                 onPressed: () => _renameList(list),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, size: 18),
+                              _buildCompactActionButton(
+                                icon: Icons.delete,
                                 color: Colors.red,
+                                tooltip: 'Delete list',
                                 onPressed: () => _deleteList(list),
                               ),
                             ],
