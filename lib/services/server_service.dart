@@ -20,6 +20,8 @@ class ServerService extends ChangeNotifier {
   String? _deviceIp;
   List<(String, String)> _deviceIps = []; // (interfaceName, address)
   String? _currentMessage;
+  String _currentMessageType = 'text';
+  Map<dynamic, dynamic>? _currentMetadata;
   bool _isRunning = false;
   final int port = 8901;
   final List<WebSocketChannel> _connectedClients = [];
@@ -208,6 +210,21 @@ class ServerService extends ChangeNotifier {
     Map<dynamic, dynamic>? metadata,
   ) {
     _currentMessage = message;
+    _currentMessageType = messageType;
+    _currentMetadata = metadata;
+    _broadcast(message, messageType, metadata);
+  }
+
+  /// Re-broadcast current state with fresh background/config (e.g. after background settings change)
+  void broadcastCurrentState() {
+    _broadcast(_currentMessage ?? '', _currentMessageType, _currentMetadata);
+  }
+
+  void _broadcast(
+    String message,
+    String messageType,
+    Map<dynamic, dynamic>? metadata,
+  ) {
     var payload = {
       'config': presenterConfig.getConfig(),
       'background': backgroundService.getBackgroundConfig(),

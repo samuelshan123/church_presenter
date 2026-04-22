@@ -202,7 +202,7 @@
 
           // Handle background image
           if (background.imagePath) {
-            bgImage.src = '/api/background';
+            bgImage.src = '/api/background?t=' + Date.now();
             bgImage.style.display = 'block';
             
             // Remove all display type classes

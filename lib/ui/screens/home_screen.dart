@@ -4,7 +4,7 @@ import '../../services/presenter_config_service.dart';
 import '../../services/server_service.dart';
 import '../../services/theme_service.dart';
 import '../widgets/grid_card_widget.dart';
-import 'backgrounds_screen.dart';
+import 'background_screen.dart';
 import 'bible/bible_screen.dart';
 import 'present_image_screen.dart';
 import 'presenter/presenter_screen.dart';
@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
         icon: Icons.wallpaper_rounded,
         title: 'Set Background',
         color: Colors.teal,
-        destinationBuilder: (_) => const BackgroundsScreen(),
+        destinationBuilder: (_) => BackgroundScreen(serverService: serverService),
       ),
       _HomeAction(
         icon: Icons.present_to_all_rounded,

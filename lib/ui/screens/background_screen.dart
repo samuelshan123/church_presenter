@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../services/background_service.dart';
+import '../../services/server_service.dart';
 
-class BackgroundsScreen extends StatelessWidget {
-  const BackgroundsScreen({super.key});
+class BackgroundScreen extends StatelessWidget {
+  final ServerService serverService;
+
+  const BackgroundScreen({super.key, required this.serverService});
 
   Future<void> _pickImage(BuildContext context) async {
     final picker = ImagePicker();
@@ -16,6 +19,7 @@ class BackgroundsScreen extends StatelessWidget {
       final result = await backgroundService.saveImage(File(image.path));
 
       if (result != null && context.mounted) {
+        serverService.broadcastCurrentState();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Background image selected')),
         );
@@ -30,6 +34,7 @@ class BackgroundsScreen extends StatelessWidget {
   Future<void> _clearImage(BuildContext context) async {
     final backgroundService = context.read<BackgroundService>();
     await backgroundService.clearImage();
+    serverService.broadcastCurrentState();
 
     if (context.mounted) {
       ScaffoldMessenger.of(
@@ -157,7 +162,10 @@ class BackgroundsScreen extends StatelessWidget {
                               color: Theme.of(context).colorScheme.primary,
                             )
                           : null,
-                      onTap: () => backgroundService.setDisplayType(type),
+                      onTap: () {
+                        backgroundService.setDisplayType(type);
+                        serverService.broadcastCurrentState();
+                      },
                     ),
                   );
                 }).toList(),
