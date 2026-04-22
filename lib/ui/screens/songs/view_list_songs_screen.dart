@@ -181,7 +181,8 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                       //   ),
                       // ),
                       title: Text(
-                        song.title,
+                        //index + 1 to show 1-based numbering
+                        '${index + 1}. ${song.title}',
                         style: const TextStyle(fontWeight: FontWeight.w600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
