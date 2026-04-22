@@ -197,12 +197,12 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
     setState(() => _selectedSectionIndex = index);
     if (widget.serverService != null && widget.serverService!.isRunning) {
       widget.serverService!.sendMessage(_displaySections[index], 'song', {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('📡 Section broadcasted to all devices'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('📡 Section broadcasted to all devices'),
+      //     duration: Duration(seconds: 1),
+      //   ),
+      // );
     }
   }
 

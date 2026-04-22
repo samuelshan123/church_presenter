@@ -167,21 +167,21 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.1),
-                      child: Icon(
-                        list.name == 'Default List'
-                            ? Icons.star
-                            : Icons.playlist_play,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
+                    // contentPadding: const EdgeInsets.symmetric(
+                    //   horizontal: 16,
+                    //   vertical: 8,
+                    // ),
+                    // leading: CircleAvatar(
+                    //   backgroundColor: Theme.of(
+                    //     context,
+                    //   ).colorScheme.primary.withOpacity(0.1),
+                    //   child: Icon(
+                    //     list.name == 'Default List'
+                    //         ? Icons.star
+                    //         : Icons.playlist_play,
+                    //     color: Theme.of(context).colorScheme.primary,
+                    //   ),
+                    // ),
                     title: Text(
                       list.name,
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -191,12 +191,12 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit),
+                                icon: const Icon(Icons.edit, size: 18),
                                 color: Colors.blue,
                                 onPressed: () => _renameList(list),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete),
+                                icon: const Icon(Icons.delete, size: 18),
                                 color: Colors.red,
                                 onPressed: () => _deleteList(list),
                               ),

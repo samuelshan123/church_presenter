@@ -261,12 +261,12 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
         'book': '${_currentBook?.tamil} $_currentChapter:${verse.verseNumber}',
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('📡 Verse broadcasted to all devices'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('📡 Verse broadcasted to all devices'),
+      //     duration: Duration(seconds: 1),
+      //   ),
+      // );
     }
   }
 

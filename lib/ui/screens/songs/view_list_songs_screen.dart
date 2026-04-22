@@ -146,19 +146,19 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                       );
                     },
                     child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.1),
-                        child: Icon(
-                          Icons.music_note,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
+                      // contentPadding: const EdgeInsets.symmetric(
+                      //   horizontal: 16,
+                      //   vertical: 8,
+                      // ),
+                      // leading: CircleAvatar(
+                      //   backgroundColor: Theme.of(
+                      //     context,
+                      //   ).colorScheme.primary.withOpacity(0.1),
+                      //   child: Icon(
+                      //     Icons.music_note,
+                      //     color: Theme.of(context).colorScheme.primary,
+                      //   ),
+                      // ),
                       title: Text(
                         song.title,
                         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -176,7 +176,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.edit),
+                            icon: const Icon(Icons.edit, size: 18),
                             color: Colors.blue,
                             onPressed: () async {
                               await Navigator.push(
@@ -190,7 +190,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                             },
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete),
+                            icon: const Icon(Icons.delete, size: 18),
                             color: Colors.red,
                             onPressed: () => _deleteSong(song),
                           ),

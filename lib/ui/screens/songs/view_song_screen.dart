@@ -54,12 +54,12 @@ void _parseSections() {
       final selectedText = _sections[index];
       widget.serverService!.sendMessage(selectedText, 'song', {});
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('📡 Section broadcasted to all devices'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('📡 Section broadcasted to all devices'),
+      //     duration: Duration(seconds: 1),
+      //   ),
+      // );
     }
   }
 
@@ -167,7 +167,7 @@ void _parseSections() {
             ),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               itemCount: _sections.length,
               itemBuilder: (context, index) {
                 final isSelected = _selectedSectionIndex == index;
@@ -175,8 +175,8 @@ void _parseSections() {
                   onTap: () => _selectSection(index),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
@@ -196,7 +196,7 @@ void _parseSections() {
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 height: 1.6,
                                 color: isSelected
                                     ? Theme.of(
