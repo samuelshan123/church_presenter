@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import '../../services/image_service.dart';
 import '../../services/server_service.dart';
 
-class PresentImagesScreen extends StatelessWidget {
+class PresentImageScreen extends StatelessWidget {
   final ServerService serverService;
 
-  const PresentImagesScreen({super.key, required this.serverService});
+  const PresentImageScreen({super.key, required this.serverService});
 
   Future<void> _pickImage(BuildContext context) async {
     final picker = ImagePicker();
@@ -85,7 +85,7 @@ class PresentImagesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Images'),
+        title: const Text('Present Image'),
         elevation: 0,
         actions: [
           Consumer<ImageService>(

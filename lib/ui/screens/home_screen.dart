@@ -6,7 +6,7 @@ import '../../services/theme_service.dart';
 import '../widgets/grid_card_widget.dart';
 import 'backgrounds_screen.dart';
 import 'bible/bible_screen.dart';
-import 'present_images_screen.dart';
+import 'present_image_screen.dart';
 import 'presenter/presenter_screen.dart';
 import 'settings_screen.dart';
 import 'songs/songs_screen.dart';
@@ -44,7 +44,7 @@ class HomeScreen extends StatelessWidget {
         icon: Icons.photo_library_rounded,
         title: 'Present Images',
         color: Colors.green,
-        destinationBuilder: (_) => PresentImagesScreen(serverService: serverService),
+        destinationBuilder: (_) => PresentImageScreen(serverService: serverService),
       ),
       _HomeAction(
         icon: Icons.wallpaper_rounded,

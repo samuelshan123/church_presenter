@@ -825,21 +825,12 @@ class _SelectionFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: animationDuration,
+    return SizedBox(
       width: expandToMaxWidth ? double.infinity : null,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.black.withValues(alpha: 0.14) : null,
-        borderRadius: BorderRadius.circular(14),
-        border: isSelected
-            ? Border.all(
-                color: Colors.white.withValues(alpha: 0.78),
-                width: 1.2,
-              )
-            : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: child,
       ),
-      child: child,
     );
   }
 }
