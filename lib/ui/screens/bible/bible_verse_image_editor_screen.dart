@@ -31,9 +31,6 @@ enum _EditableLayer { verse, reference }
 
 class _BibleVerseImageEditorScreenState
     extends State<BibleVerseImageEditorScreen> {
-  static const Duration _selectionAnimationDuration = Duration(
-    milliseconds: 160,
-  );
   final GlobalKey _canvasKey = GlobalKey();
   final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _verseController = TextEditingController();
@@ -57,8 +54,11 @@ class _BibleVerseImageEditorScreenState
   double _referenceWordSpacing = 1.0;
   TextAlign _referenceTextAlign = TextAlign.center;
 
-  bool _showSelectionOutline = true;
   bool _isSharing = false;
+  bool _verseBold = true;
+  bool _verseItalic = false;
+  bool _referenceBold = true;
+  bool _referenceItalic = false;
 
   static const List<_BackgroundTemplate> _templates = [
     _BackgroundTemplate(colors: [Color(0xFFFFC857), Color(0xFFE9724C)]),
@@ -110,8 +110,8 @@ class _BibleVerseImageEditorScreenState
   TextAlign get _activeTextAlign =>
       _isEditingVerse ? _verseTextAlign : _referenceTextAlign;
 
-  Duration get _selectionFrameDuration =>
-      _showSelectionOutline ? _selectionAnimationDuration : Duration.zero;
+  bool get _activeBold => _isEditingVerse ? _verseBold : _referenceBold;
+  bool get _activeItalic => _isEditingVerse ? _verseItalic : _referenceItalic;
 
   Future<void> _pickBackgroundImage() async {
     final image = await _imagePicker.pickImage(source: ImageSource.gallery);
@@ -164,7 +164,6 @@ class _BibleVerseImageEditorScreenState
 
     setState(() {
       _isSharing = true;
-      _showSelectionOutline = false;
     });
 
     try {
@@ -202,7 +201,6 @@ class _BibleVerseImageEditorScreenState
       if (mounted) {
         setState(() {
           _isSharing = false;
-          _showSelectionOutline = true;
         });
       }
     }
@@ -244,6 +242,26 @@ class _BibleVerseImageEditorScreenState
         _verseTextAlign = value;
       } else {
         _referenceTextAlign = value;
+      }
+    });
+  }
+
+  void _updateActiveBold(bool value) {
+    setState(() {
+      if (_isEditingVerse) {
+        _verseBold = value;
+      } else {
+        _referenceBold = value;
+      }
+    });
+  }
+
+  void _updateActiveItalic(bool value) {
+    setState(() {
+      if (_isEditingVerse) {
+        _verseItalic = value;
+      } else {
+        _referenceItalic = value;
       }
     });
   }
@@ -319,25 +337,15 @@ class _BibleVerseImageEditorScreenState
                               });
                             },
                             child: _SelectionFrame(
-                              animationDuration: _selectionFrameDuration,
-                              isSelected:
-                                  _showSelectionOutline &&
-                                  _selectedLayer == _EditableLayer.reference,
                               child: Text(
                                 _referenceText,
                                 textAlign: _referenceTextAlign,
                                 style: TextStyle(
                                   color: _referenceTextColor,
                                   fontSize: _referenceFontSize,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: _referenceBold ? FontWeight.w700 : FontWeight.w400,
+                                  fontStyle: _referenceItalic ? FontStyle.italic : FontStyle.normal,
                                   wordSpacing: _referenceWordSpacing,
-                                  shadows: const [
-                                    Shadow(
-                                      blurRadius: 2,
-                                      color: Colors.black38,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
                                 ),
                               ),
                             ),
@@ -382,10 +390,7 @@ class _BibleVerseImageEditorScreenState
 
   Widget _buildVerseLayer() {
     return _SelectionFrame(
-      animationDuration: _selectionFrameDuration,
       expandToMaxWidth: true,
-      isSelected:
-          _showSelectionOutline && _selectedLayer == _EditableLayer.verse,
       child: Text(
         _editedVerseText,
         textAlign: _verseTextAlign,
@@ -393,15 +398,9 @@ class _BibleVerseImageEditorScreenState
           color: _verseTextColor,
           fontSize: _verseFontSize,
           height: _verseLineHeight,
-          fontWeight: FontWeight.w700,
+          fontWeight: _verseBold ? FontWeight.w700 : FontWeight.w400,
+          fontStyle: _verseItalic ? FontStyle.italic : FontStyle.normal,
           wordSpacing: _verseWordSpacing,
-          shadows: const [
-            Shadow(
-              blurRadius: 2.5,
-              color: Colors.black54,
-              offset: Offset(0, 1),
-            ),
-          ],
         ),
       ),
     );
@@ -692,6 +691,46 @@ class _BibleVerseImageEditorScreenState
                         label: _activeWordSpacing.toStringAsFixed(1),
                         onChanged: _updateActiveWordSpacing,
                       ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Style',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildHorizontalOptions([
+                        ChoiceChip(
+                          label: const Text('Normal'),
+                          selected: !_activeBold && !_activeItalic,
+                          onSelected: (_) {
+                            _updateActiveBold(false);
+                            _updateActiveItalic(false);
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Bold'),
+                          selected: _activeBold && !_activeItalic,
+                          onSelected: (_) {
+                            _updateActiveBold(true);
+                            _updateActiveItalic(false);
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Italic'),
+                          selected: !_activeBold && _activeItalic,
+                          onSelected: (_) {
+                            _updateActiveBold(false);
+                            _updateActiveItalic(true);
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Bold Italic'),
+                          selected: _activeBold && _activeItalic,
+                          onSelected: (_) {
+                            _updateActiveBold(true);
+                            _updateActiveItalic(true);
+                          },
+                        ),
+                      ]),
                       if (_isEditingVerse) ...[
                         Text(
                           'Line Spacing: ${_verseLineHeight.toStringAsFixed(2)}',
@@ -812,14 +851,10 @@ class _BibleVerseImageEditorScreenState
 
 class _SelectionFrame extends StatelessWidget {
   final Widget child;
-  final bool isSelected;
   final bool expandToMaxWidth;
-  final Duration animationDuration;
 
   const _SelectionFrame({
     required this.child,
-    required this.isSelected,
-    required this.animationDuration,
     this.expandToMaxWidth = false,
   });
 
