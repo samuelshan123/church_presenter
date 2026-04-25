@@ -48,10 +48,23 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
     _currentBook = widget.book;
     _loadInitialData();
     _loadHistory();
+    globalPresenterConfig.addListener(_onConfigChanged);
+  }
+
+  void _onConfigChanged() {
+    if (_selectedVerseIndex != null &&
+        widget.serverService != null &&
+        widget.serverService!.isRunning) {
+      final verse = _verses[_selectedVerseIndex!];
+      widget.serverService!.sendMessage(verse.verseText, 'bible', {
+        'book': '${_currentBook?.tamil} $_currentChapter:${verse.verseNumber}',
+      });
+    }
   }
 
   @override
   void dispose() {
+    globalPresenterConfig.removeListener(_onConfigChanged);
     _scrollController.dispose();
     super.dispose();
   }

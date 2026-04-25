@@ -24,9 +24,25 @@ class _ViewSongScreenState extends State<ViewSongScreen> {
   final DatabaseHelper _db = DatabaseHelper.instance;
 
   @override
+  void dispose() {
+    globalPresenterConfig.removeListener(_onConfigChanged);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _parseSections();
+    globalPresenterConfig.addListener(_onConfigChanged);
+  }
+
+  void _onConfigChanged() {
+    if (_selectedSectionIndex != null &&
+        widget.serverService != null &&
+        widget.serverService!.isRunning) {
+      final selectedText = _sections[_selectedSectionIndex!];
+      widget.serverService!.sendMessage(selectedText, 'song', {});
+    }
   }
 
 void _parseSections() {

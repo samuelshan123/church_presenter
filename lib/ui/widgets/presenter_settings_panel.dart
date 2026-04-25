@@ -14,6 +14,20 @@ class PresenterSettingsPanel extends StatefulWidget {
 }
 
 class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
+  @override
+  void initState() {
+    super.initState();
+    widget.presenterConfig.addListener(_onConfigChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.presenterConfig.removeListener(_onConfigChanged);
+    super.dispose();
+  }
+
+  void _onConfigChanged() => setState(() {});
+
   void _showColorPicker(BuildContext context, {required bool isBackground}) {
     Color currentColor = isBackground
         ? (widget.presenterConfig.bgColorValue ?? Colors.black)
@@ -41,13 +55,11 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
             onPressed: () {
               final hex =
                   widget.presenterConfig.colorToHex(currentColor);
-              setState(() {
-                if (isBackground) {
-                  widget.presenterConfig.setBgColor(hex);
-                } else {
-                  widget.presenterConfig.setFgColor(hex);
-                }
-              });
+              if (isBackground) {
+                widget.presenterConfig.setBgColor(hex);
+              } else {
+                widget.presenterConfig.setFgColor(hex);
+              }
               Navigator.of(ctx).pop();
             },
             child: const Text('Select'),
@@ -73,8 +85,7 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
           max: 120,
           divisions: 96,
           label: widget.presenterConfig.fontSize.toInt().toString(),
-          onChanged: (value) =>
-              setState(() => widget.presenterConfig.setFontSize(value)),
+          onChanged: (value) => widget.presenterConfig.setFontSize(value),
         ),
         const SizedBox(height: 16),
 
@@ -91,9 +102,7 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
           currentLabel: widget.presenterConfig.bgColor,
           onTap: () => _showColorPicker(context, isBackground: true),
           onReset: widget.presenterConfig.bgColor != 'default'
-              ? () => setState(
-                    () => widget.presenterConfig.setBgColor('default'),
-                  )
+              ? () => widget.presenterConfig.setBgColor('default')
               : null,
         ),
         const SizedBox(height: 16),
@@ -112,9 +121,7 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
           foregroundForDefault: Colors.black,
           onTap: () => _showColorPicker(context, isBackground: false),
           onReset: widget.presenterConfig.fgColor != 'default'
-              ? () => setState(
-                    () => widget.presenterConfig.setFgColor('default'),
-                  )
+              ? () => widget.presenterConfig.setFgColor('default')
               : null,
         ),
       ],
