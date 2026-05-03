@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Presenter</title>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@400..800&display=swap');
 
@@ -88,23 +89,49 @@
       object-fit: none;
     }
 
+    #text-container {
+      width: 100vw;
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #text-container.bible-mode {
+      justify-content: center;
+    }
+
     #content {
+      width: 100%;
       font-weight: bold;
       color: #fff;
       text-align: center;
       font-size: clamp(2rem, 6vw, 3.5rem);
+      line-height: 1.4;
       word-break: break-word;
+      overflow: hidden;
       text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25), 0 1px 0 #fff;
       position: relative;
       z-index: 1;
     }
 
     #book {
+      width: 100%;
+      flex-shrink: 0;
       font-weight: bold;
       color: #fff;
       text-align: center;
       font-size: clamp(1.5rem, 4vw, 2.5rem);
-      margin-bottom: 0.5em;
+      margin-bottom: 1em;
+      line-height: 1.1;
+      overflow: visible;
       text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25), 0 1px 0 #fff;
       position: relative;
       z-index: 1;
@@ -115,20 +142,153 @@
 <body>
   <img id="background-image" alt="Background">
   <img id="content-image" alt="Content Image">
-  <div style="padding: 20px; position: relative; z-index: 1;" id="text-container">
+
+  <div id="text-container">
     <div id="book"></div>
     <div id="content"></div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/textfit@2.4.0/textFit.min.js"></script>
+
   <script>
     let socket;
     let reconnectDelay = 1000;
     const maxReconnectDelay = 30000;
     let reconnectTimer = null;
 
+    let latestType = null;
+    let latestConfig = {};
+
+    function getDefaultContentFontSize(config) {
+      if (config.fontSize && config.fontSize !== "default") {
+        return Number(config.fontSize);
+      }
+
+      const min = 32;
+      const preferred = window.innerWidth * 0.06;
+      const max = 56;
+
+      return Math.max(min, Math.min(preferred, max));
+    }
+
+    function getDefaultBookFontSize(config) {
+      if (config.fontSize && config.fontSize !== "default") {
+        return Number(config.fontSize) * 0.55;
+      }
+
+      const min = 18;
+      const preferred = window.innerWidth * 0.03;
+      const max = 32;
+
+      return Math.max(min, Math.min(preferred, max));
+    }
+
+    function resetFontSize(type, config) {
+      const contentEl = document.getElementById("content");
+      const bookEl = document.getElementById("book");
+
+      contentEl.style.height = "";
+      contentEl.style.maxHeight = "";
+      contentEl.style.display = "";
+      bookEl.style.display = "";
+      bookEl.style.visibility = "";
+      bookEl.style.height = "";
+
+      if (config.fontSize && config.fontSize !== "default") {
+        contentEl.style.fontSize = Number(config.fontSize) + "px";
+        bookEl.style.fontSize = (Number(config.fontSize) * 0.7) + "px";
+      } else {
+        contentEl.style.fontSize = "clamp(2rem, 6vw, 3.5rem)";
+        bookEl.style.fontSize = "clamp(1.5rem, 4vw, 2.5rem)";
+      }
+    }
+
+    function applyTextFit(type, config) {
+      if (type === "image") return;
+
+      const contentEl = document.getElementById("content");
+      const bookEl = document.getElementById("book");
+      const textContainer = document.getElementById("text-container");
+
+      resetFontSize(type, config);
+
+      const defaultContentFontSize = getDefaultContentFontSize(config);
+      const defaultBookFontSize = getDefaultBookFontSize(config);
+
+      if (type === "bible") {
+        textContainer.classList.add("bible-mode");
+
+        bookEl.style.display = "block";
+        bookEl.style.visibility = "visible";
+        bookEl.style.height = "auto";
+
+        contentEl.style.height = "auto";
+        contentEl.style.maxHeight = "none";
+        contentEl.style.overflow = "visible";
+
+        requestAnimationFrame(() => {
+          let bookFontSize = defaultBookFontSize;
+          let contentFontSize = defaultContentFontSize;
+
+          const minBookFontSize = 12;
+          const minContentFontSize = 14;
+
+          bookEl.style.fontSize = bookFontSize + "px";
+          contentEl.style.fontSize = contentFontSize + "px";
+
+          while (
+            textContainer.scrollHeight > textContainer.clientHeight &&
+            contentFontSize > minContentFontSize
+          ) {
+            contentFontSize -= 1;
+            contentEl.style.fontSize = contentFontSize + "px";
+          }
+
+          while (
+            textContainer.scrollHeight > textContainer.clientHeight &&
+            bookFontSize > minBookFontSize
+          ) {
+            bookFontSize -= 1;
+            bookEl.style.fontSize = bookFontSize + "px";
+          }
+        });
+
+        return;
+      }
+
+      textContainer.classList.remove("bible-mode");
+      bookEl.style.display = "none";
+      contentEl.style.overflow = "hidden";
+
+      requestAnimationFrame(() => {
+        const containerStyle = window.getComputedStyle(textContainer);
+        const paddingTop = parseFloat(containerStyle.paddingTop) || 0;
+        const paddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
+
+        const availableHeight =
+          textContainer.clientHeight -
+          paddingTop -
+          paddingBottom;
+
+        contentEl.style.height = Math.max(120, availableHeight) + "px";
+
+        textFit(contentEl, {
+          minFontSize: 14,
+          maxFontSize: defaultContentFontSize,
+          multiLine: true,
+          widthOnly: false,
+          alignHoriz: true,
+          alignVert: true
+        });
+      });
+    }
+
     function scheduleReconnect() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
+
       const jitteredDelay = reconnectDelay * (0.8 + Math.random() * 0.4);
       console.log(`WebSocket: reconnecting in ${Math.round(jitteredDelay / 1000)}s...`);
+
       reconnectTimer = setTimeout(connectWebSocket, jitteredDelay);
       reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
     }
@@ -144,6 +304,7 @@
       socket.onopen = function () {
         console.log('WebSocket connected');
         reconnectDelay = 1000;
+
         if (reconnectTimer) {
           clearTimeout(reconnectTimer);
           reconnectTimer = null;
@@ -154,15 +315,16 @@
         try {
           const data = JSON.parse(event.data);
           console.log(data);
-          let type = data.type; // e.g., 'text', 'bible', 'song', 'image'
+
+          let type = data.type;
           let config = data.config || {};
           let background = data.background || {};
           let imageConfig = data.imageConfig || {};
           let metadata = data.metadata || {};
           let msg = data.content;
+
           if (!msg) msg = "";
 
-          // Apply config values if not default
           const body = document.body;
           const contentEl = document.getElementById("content");
           const bookEl = document.getElementById("book");
@@ -170,45 +332,39 @@
           const contentImage = document.getElementById("content-image");
           const textContainer = document.getElementById("text-container");
 
-          // Handle content type: image
           if (type === 'image' && metadata.imagePath) {
-            // Show content image, hide text
+            textContainer.classList.remove("bible-mode");
+
             const encodedPath = encodeURIComponent(metadata.imagePath);
+
             contentImage.src = `/api/image/${encodedPath}`;
             contentImage.style.display = 'block';
             textContainer.style.display = 'none';
 
-            // Get display mode and zoom level
             const displayMode = imageConfig.displayMode || 'contain';
             const zoomLevel = imageConfig.zoomLevel || 1.0;
-            
+
             console.log('Image Config:', {
               displayMode: displayMode,
               zoomLevel: zoomLevel,
               imagePath: metadata.imagePath
             });
 
-            // Apply display mode
             contentImage.classList.remove('cover', 'contain', 'fill', 'original');
             contentImage.classList.add(displayMode);
 
-            // Apply zoom level with proper transform
             contentImage.style.transform = `translate(-50%, -50%) scale(${zoomLevel})`;
           } else {
-            // Show text content, hide content image
             contentImage.style.display = 'none';
-            textContainer.style.display = 'block';
+            textContainer.style.display = 'flex';
           }
 
-          // Handle background image
           if (background.imagePath) {
             bgImage.src = '/api/background?t=' + Date.now();
             bgImage.style.display = 'block';
-            
-            // Remove all display type classes
+
             bgImage.classList.remove('fullscreen', 'portrait', 'landscape');
-            
-            // Add the current display type class
+
             if (background.displayType) {
               bgImage.classList.add(background.displayType);
             } else {
@@ -219,14 +375,12 @@
             bgImage.src = '';
           }
 
-          // Background color (only applies if no image)
           if (config.bg && config.bg !== "default") {
             body.style.background = config.bg;
           } else {
             body.style.background = "radial-gradient(circle, rgb(34, 34, 34), black)";
           }
 
-          // Foreground color
           if (config.fg && config.fg !== "default") {
             contentEl.style.color = config.fg;
             bookEl.style.color = config.fg;
@@ -235,7 +389,6 @@
             bookEl.style.color = "#fff";
           }
 
-          // Font size
           if (config.fontSize && config.fontSize !== "default") {
             contentEl.style.fontSize = config.fontSize + "px";
             bookEl.style.fontSize = (config.fontSize * 0.7) + "px";
@@ -244,15 +397,20 @@
             bookEl.style.fontSize = "clamp(1.5rem, 4vw, 2.5rem)";
           }
 
-          // Font family
           if (config.font && config.font !== "default") {
             body.style.fontFamily = config.font;
           } else {
             body.style.fontFamily = '"Baloo Thambi 2", system-ui';
           }
 
-          document.getElementById("book").innerText = (type === 'bible' && metadata.book) ? metadata.book : '';
-          document.getElementById("content").innerText = msg;
+          bookEl.innerText = (type === 'bible' && metadata.book) ? metadata.book : '';
+          contentEl.innerText = msg;
+
+          latestType = type;
+          latestConfig = config;
+
+          applyTextFit(type, config);
+
         } catch (err) {
           console.error('Parse error:', err);
         }
@@ -265,19 +423,27 @@
 
       socket.onerror = function (error) {
         console.error('WebSocket error:', error);
-        // onclose fires after onerror — reconnect handled there
       };
     }
 
-    // Reconnect immediately when the tab becomes visible again
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && (!socket || socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING)) {
         if (reconnectTimer) {
           clearTimeout(reconnectTimer);
           reconnectTimer = null;
         }
+
         reconnectDelay = 1000;
         connectWebSocket();
+      }
+    });
+
+    window.addEventListener("resize", function () {
+      const contentEl = document.getElementById("content");
+      const bookEl = document.getElementById("book");
+
+      if (contentEl.innerText.trim() || bookEl.innerText.trim()) {
+        applyTextFit(latestType || "song", latestConfig || {});
       }
     });
 

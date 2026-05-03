@@ -38,7 +38,7 @@ class BroadcastControlBar extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: hasPrevious ? onPrevious : null,
             icon: const Icon(Icons.arrow_back, size: 20),
-            label: const Text('Previous'),
+            label: const Text('Prev'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
