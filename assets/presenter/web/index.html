@@ -152,8 +152,7 @@
 
   <script>
     let socket;
-    let reconnectDelay = 1000;
-    const maxReconnectDelay = 30000;
+    let reconnectDelay = 2000;
     let reconnectTimer = null;
 
     let latestType = null;
@@ -286,11 +285,9 @@
     function scheduleReconnect() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
 
-      const jitteredDelay = reconnectDelay * (0.8 + Math.random() * 0.4);
-      console.log(`WebSocket: reconnecting in ${Math.round(jitteredDelay / 1000)}s...`);
+      console.log(`WebSocket: reconnecting in ${Math.round(reconnectDelay / 1000)}s...`);
 
-      reconnectTimer = setTimeout(connectWebSocket, jitteredDelay);
-      reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
+      reconnectTimer = setTimeout(connectWebSocket, reconnectDelay);
     }
 
     function connectWebSocket() {
@@ -303,8 +300,6 @@
 
       socket.onopen = function () {
         console.log('WebSocket connected');
-        reconnectDelay = 1000;
-
         if (reconnectTimer) {
           clearTimeout(reconnectTimer);
           reconnectTimer = null;
