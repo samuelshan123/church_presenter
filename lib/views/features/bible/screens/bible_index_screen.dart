@@ -1,21 +1,22 @@
 import 'package:church_presenter/main.dart';
-import 'package:church_presenter/ui/screens/bible/bible_chapter_screen.dart';
 import 'package:flutter/material.dart';
-import '../../../services/bible_service.dart';
-import '../../../services/server_service.dart';
-import '../../../db/models/bible_book.dart';
-import '../../widgets/presenter_settings_panel.dart';
+import '../../../../services/bible_service.dart';
+import '../../../../services/server_service.dart';
+import '../../../../db/models/bible_book.dart';
+import '../../../widgets/presenter_settings_panel.dart';
+import '../widgets/bible_verse_history_button.dart';
+import 'bible_view_book_screen.dart';
 
-class BibleScreen extends StatefulWidget {
+class BibleIndexScreen extends StatefulWidget {
   final ServerService? serverService;
 
-  const BibleScreen({super.key, this.serverService});
+  const BibleIndexScreen({super.key, this.serverService});
 
   @override
-  State<BibleScreen> createState() => _BibleScreenState();
+  State<BibleIndexScreen> createState() => _BibleIndexScreenState();
 }
 
-class _BibleScreenState extends State<BibleScreen> {
+class _BibleIndexScreenState extends State<BibleIndexScreen> {
   final BibleService _bibleService = BibleService();
   List<BibleBook> _books = [];
   bool _isLoading = true;
@@ -48,17 +49,36 @@ class _BibleScreenState extends State<BibleScreen> {
     }
   }
 
-  void _openBook(BibleBook book) {
+  void _openBook(
+    BibleBook book, {
+    int initialChapter = 1,
+    int? initialVerseNumber,
+  }) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BibleChapterScreen(
+        builder: (context) => BibleViewBookScreen(
           book: book,
           bibleService: _bibleService,
           serverService: widget.serverService,
+          initialChapter: initialChapter,
+          initialVerseNumber: initialVerseNumber,
         ),
       ),
     );
+  }
+
+  void _openHistoryEntry(Map<String, dynamic> entry) {
+    final bookEnglish = entry['bookEnglish'] as String;
+    final bookTamil = entry['bookTamil'] as String;
+    final chapter = entry['chapter'] as int;
+    final verseNumber = entry['verseNumber'] as int;
+    final book = _books.firstWhere(
+      (b) => b.english == bookEnglish,
+      orElse: () => BibleBook(english: bookEnglish, tamil: bookTamil),
+    );
+
+    _openBook(book, initialChapter: chapter, initialVerseNumber: verseNumber);
   }
 
   @override
@@ -68,13 +88,12 @@ class _BibleScreenState extends State<BibleScreen> {
         title: const Text('Bible'),
         elevation: 0,
         actions: [
+          BibleVerseHistoryButton(onEntrySelected: _openHistoryEntry),
           IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Presenter Settings',
-            onPressed: () => showPresenterSettingsDialog(
-              context,
-              globalPresenterConfig,
-            ),
+            onPressed: () =>
+                showPresenterSettingsDialog(context, globalPresenterConfig),
           ),
         ],
       ),
@@ -126,7 +145,7 @@ class _BibleScreenState extends State<BibleScreen> {
                       style: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     trailing: Icon(

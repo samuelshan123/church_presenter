@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../controllers/song_sync_controller.dart';
+import '../../../../controllers/song_sync_controller.dart';
 
 /// Push via [SongSyncScreen.route()]. The controller is provided globally from
 /// main.dart so it survives back-navigation and ongoing syncs don't crash.

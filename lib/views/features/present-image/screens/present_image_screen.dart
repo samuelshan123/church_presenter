@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../../services/image_service.dart';
-import '../../services/server_service.dart';
+import '../../../../services/image_service.dart';
+import '../../../../services/server_service.dart';
 
 class PresentImageScreen extends StatelessWidget {
   final ServerService serverService;

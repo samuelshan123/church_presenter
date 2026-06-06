@@ -4,32 +4,37 @@ import 'package:church_presenter/db/models/bible_verse.dart';
 import 'package:church_presenter/main.dart';
 import 'package:church_presenter/services/bible_service.dart';
 import 'package:church_presenter/services/server_service.dart';
-import 'package:church_presenter/ui/screens/bible/bible_verse_image_editor_screen.dart';
+import 'package:church_presenter/views/features/bible/screens/bible_verse_image_editor_screen.dart';
+import 'package:church_presenter/views/features/bible/widgets/bible_verse_history_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../widgets/broadcast_info_banner.dart';
-import '../../widgets/broadcast_control_bar.dart';
-import '../../widgets/presenter_settings_panel.dart';
+import '../../../widgets/broadcast_info_banner.dart';
+import '../../../widgets/broadcast_control_bar.dart';
+import '../../../widgets/presenter_settings_panel.dart';
 
-class BibleChapterScreen extends StatefulWidget {
+class BibleViewBookScreen extends StatefulWidget {
   final BibleBook book;
   final BibleService bibleService;
   final ServerService? serverService;
+  final int initialChapter;
+  final int? initialVerseNumber;
 
-  const BibleChapterScreen({
+  const BibleViewBookScreen({
     super.key,
     required this.book,
     required this.bibleService,
     this.serverService,
+    this.initialChapter = 1,
+    this.initialVerseNumber,
   });
 
   @override
-  State<BibleChapterScreen> createState() => _BibleChapterScreenState();
+  State<BibleViewBookScreen> createState() => _BibleViewBookScreenState();
 }
 
-class _BibleChapterScreenState extends State<BibleChapterScreen> {
+class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
   int _currentChapter = 1;
   int _totalChapters = 1;
   List<BibleVerse> _verses = [];
@@ -39,16 +44,14 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
   List<BibleBook> _allBooks = [];
   BibleBook? _currentBook;
   int? _selectedVerseIndex;
-  List<Map<String, dynamic>> _verseHistory = [];
-  bool _historySortNewest = true;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _currentBook = widget.book;
+    _currentChapter = widget.initialChapter;
     _loadInitialData();
-    _loadHistory();
     globalPresenterConfig.addListener(_onConfigChanged);
   }
 
@@ -76,7 +79,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
       _allBooks = await widget.bibleService.loadBooks();
 
       // Load chapter data
-      await _loadChapterData();
+      await _loadChapterData(jumpToVerseNumber: widget.initialVerseNumber);
     } catch (e) {
       setState(() {
         _error = 'Failed to load data: $e';
@@ -284,15 +287,6 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
     }
   }
 
-  Future<void> _loadHistory() async {
-    final rows = await DatabaseHelper.instance.getBibleHistory();
-    if (mounted) {
-      setState(() {
-        _verseHistory = rows;
-      });
-    }
-  }
-
   Future<void> _saveToHistory(BibleVerse verse) async {
     if (_currentBook == null) return;
     await DatabaseHelper.instance.insertBibleHistory(
@@ -301,7 +295,6 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
       chapter: _currentChapter,
       verseNumber: verse.verseNumber,
     );
-    await _loadHistory();
   }
 
   String _formatVerseForSharing(BibleVerse verse) {
@@ -524,174 +517,6 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
     );
   }
 
-  void _showHistoryDialog() {
-    if (_verseHistory.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No verse history yet'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    String _formatDayLabel(String dayKey) {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final yesterday = today.subtract(const Duration(days: 1));
-      final parts = dayKey.split('-');
-      final d = DateTime(
-        int.parse(parts[0]),
-        int.parse(parts[1]),
-        int.parse(parts[2]),
-      );
-      if (d == today) return 'Today';
-      if (d == yesterday) return 'Yesterday';
-      const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-      ];
-      final month = months[d.month - 1];
-      if (d.year == now.year) return '$month ${d.day}';
-      return '$month ${d.day}, ${d.year}';
-    }
-
-    String _formatTime(String timestamp) {
-      final dt = DateTime.parse(timestamp).toLocal();
-      final h = dt.hour > 12
-          ? dt.hour - 12
-          : (dt.hour == 0 ? 12 : dt.hour);
-      final m = dt.minute.toString().padLeft(2, '0');
-      final period = dt.hour >= 12 ? 'PM' : 'AM';
-      return '$h:$m $period';
-    }
-
-    Map<String, List<Map<String, dynamic>>> _buildGrouped(bool newestFirst) {
-      final entries = newestFirst
-          ? _verseHistory
-          : _verseHistory.reversed.toList();
-      final grouped = <String, List<Map<String, dynamic>>>{};
-      for (final entry in entries) {
-        final dt = DateTime.parse(entry['timestamp'] as String).toLocal();
-        final dayKey =
-            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
-        grouped.putIfAbsent(dayKey, () => []).add(entry);
-      }
-      return grouped;
-    }
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final grouped = _buildGrouped(_historySortNewest);
-            final days = grouped.keys.toList();
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Expanded(child: Text('Verse History')),
-                  Tooltip(
-                    message: _historySortNewest
-                        ? 'Newest first'
-                        : 'Oldest first',
-                    child: TextButton.icon(
-                      icon: Icon(
-                        _historySortNewest
-                            ? Icons.arrow_downward
-                            : Icons.arrow_upward,
-                        size: 16,
-                      ),
-                      label: Text(
-                        _historySortNewest ? 'Newest' : 'Oldest',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      onPressed: () {
-                        setState(
-                          () => _historySortNewest = !_historySortNewest,
-                        );
-                        setDialogState(() {});
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 400,
-                child: ListView.builder(
-                  itemCount: days.length,
-                  itemBuilder: (context, dayIndex) {
-                    final day = days[dayIndex];
-                    final entries = grouped[day]!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            _formatDayLabel(day),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        ...entries.map((entry) {
-                          return ListTile(
-                            dense: true,
-                            title: Text(
-                              '${entry['bookTamil']} ${entry['chapter']}:${entry['verseNumber']}',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            trailing: Text(
-                              _formatTime(entry['timestamp'] as String),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.pop(context);
-                              _navigateToHistoryEntry(entry);
-                            },
-                          );
-                        }),
-                        const Divider(),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await DatabaseHelper.instance.clearBibleHistory();
-                    await _loadHistory();
-                  },
-                  child: Text(
-                    'Clear All',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _navigateToHistoryEntry(Map<String, dynamic> entry) {
     final bookEnglish = entry['bookEnglish'] as String;
     final bookTamil = entry['bookTamil'] as String;
@@ -821,11 +646,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
         ),
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Verse History',
-            onPressed: _showHistoryDialog,
-          ),
+          BibleVerseHistoryButton(onEntrySelected: _navigateToHistoryEntry),
           IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Presenter Settings',
@@ -947,7 +768,7 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
                                   Expanded(
                                     child: Text(
                                       '${verse.verseNumber}. ${verse.verseText}',
-                                      style:TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         height: 1.6,
                                         fontWeight: FontWeight.w600,

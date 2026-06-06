@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../db/database_helper.dart';
-import '../../../db/models/song.dart';
-import '../../../db/models/song_list.dart';
-import '../../../main.dart';
+import '../../../../db/database_helper.dart';
+import '../../../../db/models/song.dart';
+import '../../../../db/models/song_list.dart';
+import '../../../../main.dart';
 import 'add_edit_song_screen.dart';
 import 'view_song_screen.dart';
 

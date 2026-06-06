@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../db/database_helper.dart';
-import '../../../db/models/song.dart';
+import '../../../../db/database_helper.dart';
+import '../../../../db/models/song.dart';
 
 class AddEditSongScreen extends StatefulWidget {
   final Song? song;

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../../db/database_helper.dart';
-import '../../../db/models/song.dart';
-import '../../../db/models/song_list.dart';
-import '../../../main.dart';
-import '../../../services/server_service.dart';
-import '../../widgets/broadcast_info_banner.dart';
-import '../../widgets/broadcast_control_bar.dart';
-import '../../widgets/presenter_settings_panel.dart';
+import '../../../../db/database_helper.dart';
+import '../../../../db/models/song.dart';
+import '../../../../db/models/song_list.dart';
+import '../../../../main.dart';
+import '../../../../services/server_service.dart';
+import '../../../widgets/broadcast_info_banner.dart';
+import '../../../widgets/broadcast_control_bar.dart';
+import '../../../widgets/presenter_settings_panel.dart';
 
 class ViewSongScreen extends StatefulWidget {
   final Song song;

@@ -4,12 +4,12 @@ import '../../services/presenter_config_service.dart';
 import '../../services/server_service.dart';
 import '../../services/theme_service.dart';
 import '../widgets/grid_card_widget.dart';
-import 'background_screen.dart';
-import 'bible/bible_screen.dart';
-import 'present_image_screen.dart';
-import 'presenter/presenter_screen.dart';
+import 'backgrounds/screens/background_screen.dart';
+import 'bible/screens/bible_index_screen.dart';
+import 'present-image/screens/present_image_screen.dart';
+import 'presenter/screens/presenter_screen.dart';
 import 'settings_screen.dart';
-import 'songs/songs_screen.dart';
+import 'songs/screens/songs_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final ThemeService themeService;
@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
         icon: Icons.menu_book_rounded,
         title: 'Bible',
         color: Colors.blue,
-        destinationBuilder: (_) => BibleScreen(serverService: serverService),
+        destinationBuilder: (_) => BibleIndexScreen(serverService: serverService),
       ),
       _HomeAction(
         icon: Icons.photo_library_rounded,

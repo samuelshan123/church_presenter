@@ -8,7 +8,7 @@ import 'services/server_service.dart';
 import 'services/presenter_config_service.dart';
 import 'services/background_service.dart';
 import 'services/image_service.dart';
-import 'ui/screens/home_screen.dart';
+import 'views/features/home_screen.dart';
 
 // Global service instances that persist throughout the app lifecycle
 final PresenterConfigService globalPresenterConfig = PresenterConfigService();

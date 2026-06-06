@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../db/database_helper.dart';
-import '../../../db/models/song_list.dart';
+import '../../../../db/database_helper.dart';
+import '../../../../db/models/song_list.dart';
 import 'view_list_songs_screen.dart';
 
 class MySongsListScreen extends StatefulWidget {
