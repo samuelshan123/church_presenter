@@ -138,54 +138,24 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
   }
 
   void _showBookSelector() {
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Book'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _allBooks.length,
-              itemBuilder: (context, index) {
-                final book = _allBooks[index];
-                final isSelected = book.english == _currentBook?.english;
-                return ListTile(
-                  selected: isSelected,
-                  leading: Icon(
-                    isSelected ? Icons.check_circle : Icons.book,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
-                  ),
-                  title: Text(
-                    book.tamil,
-                    style: TextStyle(
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                  subtitle: Text(book.english),
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      _currentBook = book;
-                      _currentChapter = 1;
-                    });
-                    _loadChapterData();
-                  },
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext sheetContext) {
+        return _BookSelectorSheet(
+          allBooks: _allBooks,
+          currentBook: _currentBook,
+          onBookSelected: (book) {
+            Navigator.pop(sheetContext);
+            setState(() {
+              _currentBook = book;
+              _currentChapter = 1;
+            });
+            _loadChapterData();
+          },
         );
       },
     );
@@ -786,6 +756,132 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+class _BookSelectorSheet extends StatefulWidget {
+  final List<BibleBook> allBooks;
+  final BibleBook? currentBook;
+  final ValueChanged<BibleBook> onBookSelected;
+
+  const _BookSelectorSheet({
+    required this.allBooks,
+    required this.currentBook,
+    required this.onBookSelected,
+  });
+
+  @override
+  State<_BookSelectorSheet> createState() => _BookSelectorSheetState();
+}
+
+class _BookSelectorSheetState extends State<_BookSelectorSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _query.trim().toLowerCase();
+    final filteredBooks = query.isEmpty
+        ? widget.allBooks
+        : widget.allBooks
+              .where(
+                (book) =>
+                    book.english.toLowerCase().contains(query) ||
+                    book.tamil.toLowerCase().contains(query),
+              )
+              .toList();
+
+    return SafeArea(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Select Book',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: (value) => setState(() => _query = value),
+                decoration: InputDecoration(
+                  hintText: 'Search books (Tamil or English)',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                        ),
+                  isDense: true,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: filteredBooks.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No books match "${_searchController.text}"',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: filteredBooks.length,
+                      itemBuilder: (context, index) {
+                        final book = filteredBooks[index];
+                        final isSelected =
+                            book.english == widget.currentBook?.english;
+                        return ListTile(
+                          selected: isSelected,
+                          leading: Icon(
+                            isSelected ? Icons.check_circle : Icons.book,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                          title: Text(
+                            book.tamil,
+                            style: TextStyle(
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          subtitle: Text(book.english),
+                          onTap: () => widget.onBookSelected(book),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

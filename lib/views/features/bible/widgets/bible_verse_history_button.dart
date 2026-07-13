@@ -83,111 +83,152 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
       return grouped;
     }
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
+          builder: (context, setSheetState) {
             final grouped = buildGrouped(_historySortNewest);
             final days = grouped.keys.toList();
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Expanded(child: Text('Verse History')),
-                  Tooltip(
-                    message: _historySortNewest
-                        ? 'Newest first'
-                        : 'Oldest first',
-                    child: TextButton.icon(
-                      icon: Icon(
-                        _historySortNewest
-                            ? Icons.arrow_downward
-                            : Icons.arrow_upward,
-                        size: 16,
-                      ),
-                      label: Text(
-                        _historySortNewest ? 'Newest' : 'Oldest',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      onPressed: () {
-                        setState(
-                          () => _historySortNewest = !_historySortNewest,
-                        );
-                        setDialogState(() {});
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 400,
-                child: ListView.builder(
-                  itemCount: days.length,
-                  itemBuilder: (context, dayIndex) {
-                    final day = days[dayIndex];
-                    final entries = grouped[day]!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            formatDayLabel(day),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        ...entries.map((entry) {
-                          return ListTile(
-                            dense: true,
-                            title: Text(
-                              '${entry['bookTamil']} ${entry['chapter']}:${entry['verseNumber']}',
-                              style: const TextStyle(
+            return SafeArea(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Verse History',
+                              style: TextStyle(
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            trailing: Text(
-                              formatTime(entry['timestamp'] as String),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                          ),
+                          Tooltip(
+                            message: _historySortNewest
+                                ? 'Newest first'
+                                : 'Oldest first',
+                            child: TextButton.icon(
+                              icon: Icon(
+                                _historySortNewest
+                                    ? Icons.arrow_downward
+                                    : Icons.arrow_upward,
+                                size: 16,
                               ),
+                              label: Text(
+                                _historySortNewest ? 'Newest' : 'Oldest',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              onPressed: () {
+                                setState(
+                                  () => _historySortNewest = !_historySortNewest,
+                                );
+                                setSheetState(() {});
+                              },
                             ),
-                            onTap: () {
-                              Navigator.pop(context);
-                              widget.onEntrySelected(entry);
-                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: days.length,
+                        itemBuilder: (context, dayIndex) {
+                          final day = days[dayIndex];
+                          final entries = grouped[day]!;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  formatDayLabel(day),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              ...entries.map((entry) {
+                                return ListTile(
+                                  dense: true,
+                                  title: Text(
+                                    '${entry['bookTamil']} ${entry['chapter']}:${entry['verseNumber']}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  trailing: Text(
+                                    formatTime(entry['timestamp'] as String),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    widget.onEntrySelected(entry);
+                                  },
+                                );
+                              }),
+                              const Divider(),
+                            ],
                           );
-                        }),
-                        const Divider(),
-                      ],
-                    );
-                  },
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                await DatabaseHelper.instance
+                                    .clearBibleHistory();
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                              child: const Text('Clear All'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Close'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await DatabaseHelper.instance.clearBibleHistory();
-                  },
-                  child: Text(
-                    'Clear All',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-              ],
             );
           },
         );

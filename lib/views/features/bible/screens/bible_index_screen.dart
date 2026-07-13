@@ -18,14 +18,34 @@ class BibleIndexScreen extends StatefulWidget {
 
 class _BibleIndexScreenState extends State<BibleIndexScreen> {
   final BibleService _bibleService = BibleService();
+  final TextEditingController _searchController = TextEditingController();
   List<BibleBook> _books = [];
+  String _searchQuery = '';
   bool _isLoading = true;
   String? _error;
+
+  List<BibleBook> get _filteredBooks {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return _books;
+    return _books
+        .where(
+          (book) =>
+              book.english.toLowerCase().contains(query) ||
+              book.tamil.toLowerCase().contains(query),
+        )
+        .toList();
+  }
 
   @override
   void initState() {
     super.initState();
     _loadBooks();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadBooks() async {
@@ -96,6 +116,36 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
                 showPresenterSettingsDialog(context, globalPresenterConfig),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() => _searchQuery = value),
+              decoration: InputDecoration(
+                hintText: 'Search books',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      ),
+                isDense: true,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -123,10 +173,17 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
                 ],
               ),
             )
+          : _filteredBooks.isEmpty
+          ? Center(
+              child: Text(
+                'No books match "$_searchQuery"',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            )
           : ListView.builder(
-              itemCount: _books.length,
+              itemCount: _filteredBooks.length,
               itemBuilder: (context, index) {
-                final book = _books[index];
+                final book = _filteredBooks[index];
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 16,
