@@ -201,7 +201,7 @@ void _parseSections() {
                             : Theme.of(
                                 context,
                               ).colorScheme.outline.withOpacity(0.2),
-                        width: isSelected ? 3 : 1,
+                        width: isSelected ? 2 : 1,
                       ),
                     ),
                     child: Column(

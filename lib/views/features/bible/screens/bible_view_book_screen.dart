@@ -350,72 +350,73 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
     );
   }
 
-  Future<void> _scrollToIndex(int index, {int retryCount = 0}) async {
+  // Rough average height of a verse tile, used as the initial guess when
+  // jumping to an off-screen target so the lazy ListView builds it. Refined
+  // on each iteration using the actual position of already-built verses.
+  static const double _estimatedVerseExtent = 90;
+
+  Future<void> _scrollToIndex(int index) async {
     if (!mounted || index < 0 || index >= _verseKeys.length) return;
 
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
+    if (!mounted || !_scrollController.hasClients) return;
 
-    if (!_scrollController.hasClients) {
-      _retryScrollToIndex(index, retryCount);
-      return;
+    // Iteratively jump closer to the target: each pass estimates the target
+    // offset from the nearest verse that's actually been built (falling back
+    // to a flat per-verse estimate the first time), until the exact verse
+    // exists in the tree — then hand off to ensureVisible for the final,
+    // precise alignment/animation.
+    for (var i = 0; i < 8; i++) {
+      final ctx = _verseKeys[index].currentContext;
+      if (ctx != null) {
+        await Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.1,
+        );
+        return;
+      }
+
+      final estimatedOffset = _estimateOffsetForIndex(index);
+      if (estimatedOffset == null) return;
+      _scrollController.jumpTo(estimatedOffset);
+
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || !_scrollController.hasClients) return;
     }
+  }
 
-    final ctx = _verseKeys[index].currentContext;
-    final renderObject = ctx?.findRenderObject();
-    if (renderObject == null) {
-      _retryScrollToIndex(index, retryCount);
-      return;
-    }
-
-    final viewport = RenderAbstractViewport.of(renderObject);
+  /// Estimates the scroll offset for [index] using the nearest verse whose
+  /// render box is already known, falling back to a flat per-verse guess.
+  double? _estimateOffsetForIndex(int index) {
+    if (!_scrollController.hasClients) return null;
     final position = _scrollController.position;
-    final revealOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
-    final targetOffset = (revealOffset - 24).clamp(
+
+    int? nearestBuiltIndex;
+    double? nearestBuiltOffset;
+    for (var i = 0; i < _verseKeys.length; i++) {
+      final ctx = _verseKeys[i].currentContext;
+      final renderObject = ctx?.findRenderObject();
+      if (renderObject == null) continue;
+      final viewport = RenderAbstractViewport.of(renderObject);
+      final offset = viewport.getOffsetToReveal(renderObject, 0).offset;
+      if (nearestBuiltIndex == null ||
+          (i - index).abs() < (nearestBuiltIndex - index).abs()) {
+        nearestBuiltIndex = i;
+        nearestBuiltOffset = offset;
+      }
+    }
+
+    final estimated = nearestBuiltIndex != null
+        ? nearestBuiltOffset! +
+              (index - nearestBuiltIndex) * _estimatedVerseExtent
+        : index * _estimatedVerseExtent;
+
+    return estimated.clamp(
       position.minScrollExtent,
       position.maxScrollExtent,
     );
-
-    final delta = (position.pixels - targetOffset).abs();
-    if (delta > 1) {
-      await _scrollController.animateTo(
-        targetOffset.toDouble(),
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-      );
-    }
-
-    if (_isVerseOutOfView(index) && retryCount < 6) {
-      _retryScrollToIndex(index, retryCount);
-    }
-  }
-
-  void _retryScrollToIndex(int index, int retryCount) {
-    if (retryCount >= 6) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToIndex(index, retryCount: retryCount + 1);
-    });
-  }
-
-  bool _isVerseOutOfView(int index) {
-    if (!_scrollController.hasClients ||
-        index < 0 ||
-        index >= _verseKeys.length) {
-      return false;
-    }
-
-    final ctx = _verseKeys[index].currentContext;
-    final renderObject = ctx?.findRenderObject();
-    if (renderObject == null) return false;
-
-    final viewport = RenderAbstractViewport.of(renderObject);
-    final position = _scrollController.position;
-    final topOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
-    final bottomOffset = viewport.getOffsetToReveal(renderObject, 1).offset;
-    final visibleTop = position.pixels;
-    final visibleBottom = position.pixels + position.viewportDimension;
-
-    return topOffset < visibleTop || bottomOffset > visibleBottom;
   }
 
   void _showVerseSelector() {
@@ -705,53 +706,49 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                         _selectedVerseIndex! < _verses.length - 1,
                   ),
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: ListView.builder(
                     controller: _scrollController,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: List.generate(_verses.length, (index) {
-                          final verse = _verses[index];
-                          final isSelected = _selectedVerseIndex == index;
-                          return GestureDetector(
-                            key: _verseKeys[index],
-                            onTap: () => _selectVerse(index),
-                            onLongPress: () => _showVerseActions(verse),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.outlineVariant,
-                                  width: isSelected ? 3 : 1.5,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _verses.length,
+                    itemBuilder: (context, index) {
+                      final verse = _verses[index];
+                      final isSelected = _selectedVerseIndex == index;
+                      return GestureDetector(
+                        key: _verseKeys[index],
+                        onTap: () => _selectVerse(index),
+                        onLongPress: () => _showVerseActions(verse),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.outlineVariant,
+                              width: isSelected ? 2 : 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${verse.verseNumber}. ${verse.verseText}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    height: 1.6,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${verse.verseNumber}. ${verse.verseText}',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        height: 1.6,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
