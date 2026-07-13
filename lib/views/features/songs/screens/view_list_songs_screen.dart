@@ -3,6 +3,8 @@ import '../../../../db/database_helper.dart';
 import '../../../../db/models/song.dart';
 import '../../../../db/models/song_list.dart';
 import '../../../../main.dart';
+import '../utils/confirm_delete_dialog.dart';
+import '../widgets/compact_action_button.dart';
 import 'add_edit_song_screen.dart';
 import 'view_song_screen.dart';
 
@@ -20,11 +22,6 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
   List<Song> _songsInList = [];
   bool _isLoading = true;
 
-  static const BoxConstraints _compactActionConstraints = BoxConstraints(
-    minWidth: 32,
-    minHeight: 32,
-  );
-
   @override
   void initState() {
     super.initState();
@@ -41,26 +38,13 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
   }
 
   Future<void> _deleteSong(Song song) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Song'),
-        content: Text('Permanently delete "${song.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final confirmed = await confirmDelete(
+      context,
+      title: 'Delete Song',
+      message: 'Permanently delete "${song.title}"?',
     );
 
-    if (confirm == true) {
+    if (confirmed) {
       await _db.deleteSong(song.id!);
       _loadSongs();
       if (mounted) {
@@ -69,24 +53,6 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
         ).showSnackBar(SnackBar(content: Text('${song.title} deleted')));
       }
     }
-  }
-
-  Widget _buildCompactActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    return IconButton(
-      constraints: _compactActionConstraints,
-      padding: EdgeInsets.zero,
-      splashRadius: 18,
-      visualDensity: VisualDensity.compact,
-      icon: Icon(icon, size: 18),
-      color: color,
-      tooltip: tooltip,
-      onPressed: onPressed,
-    );
   }
 
   @override
@@ -167,19 +133,6 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                       );
                     },
                     child: ListTile(
-                      // contentPadding: const EdgeInsets.symmetric(
-                      //   horizontal: 16,
-                      //   vertical: 8,
-                      // ),
-                      // leading: CircleAvatar(
-                      //   backgroundColor: Theme.of(
-                      //     context,
-                      //   ).colorScheme.primary.withOpacity(0.1),
-                      //   child: Icon(
-                      //     Icons.music_note,
-                      //     color: Theme.of(context).colorScheme.primary,
-                      //   ),
-                      // ),
                       title: Text(
                         //index + 1 to show 1-based numbering
                         '${index + 1}. ${song.title}',
@@ -187,17 +140,10 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      // subtitle: Text(
-                      //   song.content.length > 50
-                      //       ? '${song.content.substring(0, 50)}...'
-                      //       : song.content,
-                      //   maxLines: 2,
-                      //   overflow: TextOverflow.ellipsis,
-                      // ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildCompactActionButton(
+                          CompactActionButton(
                             icon: Icons.edit,
                             color: Colors.blue,
                             tooltip: 'Edit song',
@@ -212,7 +158,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                               _loadSongs();
                             },
                           ),
-                          _buildCompactActionButton(
+                          CompactActionButton(
                             icon: Icons.delete,
                             color: Colors.red,
                             tooltip: 'Delete song',

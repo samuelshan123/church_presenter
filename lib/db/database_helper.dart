@@ -162,6 +162,17 @@ class DatabaseHelper {
     return await db.delete('songs', where: 'id = ?', whereArgs: [id]);
   }
 
+  /// Creates [song] and, if [listId] is non-null, adds it to that list in
+  /// the same call — used by every "save song" flow that offers an optional
+  /// destination list.
+  Future<Song> createSongAndOptionallyAddToList(Song song, int? listId) async {
+    final created = await createSong(song);
+    if (listId != null && created.id != null) {
+      await addSongToList(listId, created.id!);
+    }
+    return created;
+  }
+
   Future<List<Song>> searchSongsByTitle(String title) async {
     final db = await database;
     final result = await db.query(
@@ -263,6 +274,19 @@ class DatabaseHelper {
       whereArgs: [listId, songId],
     );
     return result.isNotEmpty;
+  }
+
+  /// Returns the set of list IDs that already contain [songId], in a single
+  /// query — use this instead of calling [isSongInList] once per list.
+  Future<Set<int>> getListIdsContainingSong(int songId) async {
+    final db = await database;
+    final result = await db.query(
+      'list_songs',
+      columns: ['listId'],
+      where: 'songId = ?',
+      whereArgs: [songId],
+    );
+    return result.map((r) => r['listId'] as int).toSet();
   }
 
   Future<void> _createBibleHistoryTable(Database db) async {

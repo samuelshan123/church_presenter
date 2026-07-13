@@ -7,6 +7,9 @@ import '../../../../services/server_service.dart';
 import '../../../widgets/broadcast_info_banner.dart';
 import '../../../widgets/broadcast_control_bar.dart';
 import '../../../widgets/presenter_settings_panel.dart';
+import '../utils/list_name_sheet.dart';
+import '../utils/section_broadcast_controller.dart';
+import '../utils/song_section_parser.dart';
 
 class ViewSongScreen extends StatefulWidget {
   final Song song;
@@ -18,99 +21,28 @@ class ViewSongScreen extends StatefulWidget {
   State<ViewSongScreen> createState() => _ViewSongScreenState();
 }
 
-class _ViewSongScreenState extends State<ViewSongScreen> {
-  int? _selectedSectionIndex;
+class _ViewSongScreenState extends State<ViewSongScreen>
+    with SectionBroadcastController<ViewSongScreen> {
   List<String> _sections = [];
   final DatabaseHelper _db = DatabaseHelper.instance;
 
   @override
+  ServerService? get serverService => widget.serverService;
+
+  @override
+  List<String> get sections => _sections;
+
+  @override
   void dispose() {
-    globalPresenterConfig.removeListener(_onConfigChanged);
+    disposeSectionBroadcastListener();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _parseSections();
-    globalPresenterConfig.addListener(_onConfigChanged);
-  }
-
-  void _onConfigChanged() {
-    if (_selectedSectionIndex != null &&
-        widget.serverService != null &&
-        widget.serverService!.isRunning) {
-      final selectedText = _sections[_selectedSectionIndex!];
-      widget.serverService!.sendMessage(selectedText, 'song', {});
-    }
-  }
-
-void _parseSections() {
-  final content = widget.song.content
-      .replaceAll('\r\n', '\n')
-      .replaceAll('\r', '\n')
-      .trim();
-
-  // debugPrint(content);
-
-  _sections = content
-      .split(RegExp(r'\n\s*\n'))
-      .where((section) => section.trim().isNotEmpty)
-      .map((section) => section.trim())
-      .toList();
-}
-
-  void _selectSection(int index) {
-    setState(() {
-      _selectedSectionIndex = index;
-    });
-
-    // Broadcast selected section via server
-    if (widget.serverService != null && widget.serverService!.isRunning) {
-      final selectedText = _sections[index];
-      widget.serverService!.sendMessage(selectedText, 'song', {});
-
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(
-      //     content: Text('📡 Section broadcasted to all devices'),
-      //     duration: Duration(seconds: 1),
-      //   ),
-      // );
-    }
-  }
-
-  void _nextSection() {
-    if (_selectedSectionIndex == null) {
-      _selectSection(0);
-    } else if (_selectedSectionIndex! < _sections.length - 1) {
-      _selectSection(_selectedSectionIndex! + 1);
-    }
-  }
-
-  void _previousSection() {
-    if (_selectedSectionIndex == null) {
-      _selectSection(0);
-    } else if (_selectedSectionIndex! > 0) {
-      _selectSection(_selectedSectionIndex! - 1);
-    }
-  }
-
-  void _clearBroadcast() {
-    setState(() {
-      _selectedSectionIndex = null;
-    });
-
-    // Send empty message to clear the display
-    if (widget.serverService != null && widget.serverService!.isRunning) {
-      widget.serverService!.sendMessage('', 'song', {});
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🔲 Display cleared'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-    }
+    _sections = parseSongSections(widget.song.content);
+    initSectionBroadcastListener();
   }
 
   Future<void> _showAddToListDialog() async {
@@ -121,10 +53,10 @@ void _parseSections() {
     }
 
     final lists = await _db.readAllSongLists();
-    final membership = <int, bool>{};
-    for (final list in lists) {
-      membership[list.id!] = await _db.isSongInList(list.id!, song.id!);
-    }
+    final memberListIds = await _db.getListIdsContainingSong(song.id!);
+    final membership = {
+      for (final list in lists) list.id!: memberListIds.contains(list.id!),
+    };
 
     if (!mounted) return;
 
@@ -176,23 +108,20 @@ void _parseSections() {
             ),
           if (serverActive)
             BroadcastControlBar(
-              onPrevious: _previousSection,
-              onNext: _nextSection,
-              onClear: _clearBroadcast,
-              hasPrevious:
-                  _selectedSectionIndex != null && _selectedSectionIndex! > 0,
-              hasNext:
-                  _selectedSectionIndex != null &&
-                  _selectedSectionIndex! < _sections.length - 1,
+              onPrevious: previousSection,
+              onNext: nextSection,
+              onClear: clearBroadcast,
+              hasPrevious: hasPreviousSection,
+              hasNext: hasNextSection,
             ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: _sections.length,
               itemBuilder: (context, index) {
-                final isSelected = _selectedSectionIndex == index;
+                final isSelected = selectedSectionIndex == index;
                 return GestureDetector(
-                  onTap: () => _selectSection(index),
+                  onTap: () => selectSection(index),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.only(bottom: 8),
@@ -204,7 +133,7 @@ void _parseSections() {
                             ? Theme.of(context).colorScheme.primary
                             : Theme.of(
                                 context,
-                              ).colorScheme.outline.withOpacity(0.2),
+                              ).colorScheme.outline.withValues(alpha: 0.2),
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -295,62 +224,10 @@ class _AddToListSheetState extends State<_AddToListSheet> {
   }
 
   Future<void> _createAndAddToList() async {
-    final controller = TextEditingController();
-    final name = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          16,
-          20,
-          MediaQuery.of(context).viewInsets.bottom + 16,
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'New List',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'List Name',
-                  border: OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onSubmitted: (v) => Navigator.pop(context, v),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(context, controller.text),
-                      child: const Text('Create'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+    final name = await showListNameSheet(
+      context,
+      title: 'New List',
+      confirmLabel: 'Create',
     );
 
     if (name == null || name.trim().isEmpty) return;
@@ -413,9 +290,7 @@ class _AddToListSheetState extends State<_AddToListSheet> {
                         final inList = _membership[list.id!] ?? false;
                         return ListTile(
                           leading: Icon(
-                            list.name == 'Favorite Songs'
-                                ? Icons.star
-                                : Icons.playlist_play,
+                            list.isDefault ? Icons.star : Icons.playlist_play,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           title: Text(list.name),

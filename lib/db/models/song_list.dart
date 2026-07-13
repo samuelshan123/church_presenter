@@ -1,7 +1,13 @@
 class SongList {
+  /// Name of the list seeded by [DatabaseHelper] on first launch; protected
+  /// from rename/delete in the UI.
+  static const String defaultListName = 'Favorite Songs';
+
   final int? id;
   final String name;
   final DateTime createdAt;
+
+  bool get isDefault => name == defaultListName;
 
   SongList({
     this.id,

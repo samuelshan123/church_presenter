@@ -47,12 +47,10 @@ class _AddEditSongScreenState extends State<AddEditSongScreen> {
           title: _titleController.text.trim(),
           content: _contentController.text.trim(),
         );
-        final createdSong = await _db.createSong(newSong);
-
-        // If listId provided, add song to that list
-        if (widget.addToListId != null && createdSong.id != null) {
-          await _db.addSongToList(widget.addToListId!, createdSong.id!);
-        }
+        await _db.createSongAndOptionallyAddToList(
+          newSong,
+          widget.addToListId,
+        );
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

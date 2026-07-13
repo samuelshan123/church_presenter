@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../db/database_helper.dart';
 import '../../../../db/models/song_list.dart';
+import '../utils/confirm_delete_dialog.dart';
+import '../utils/list_name_sheet.dart';
+import '../widgets/compact_action_button.dart';
 import 'view_list_songs_screen.dart';
 
 class MySongsListScreen extends StatefulWidget {
@@ -14,11 +17,6 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
   final DatabaseHelper _db = DatabaseHelper.instance;
   List<SongList> _lists = [];
   bool _isLoading = true;
-
-  static const BoxConstraints _compactActionConstraints = BoxConstraints(
-    minWidth: 32,
-    minHeight: 32,
-  );
 
   @override
   void initState() {
@@ -35,69 +33,9 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
     });
   }
 
-  Future<String?> _showListNameSheet({
-    required String title,
-    required String confirmLabel,
-    String initialValue = '',
-  }) {
-    final controller = TextEditingController(text: initialValue);
-    return showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          16,
-          20,
-          MediaQuery.of(context).viewInsets.bottom + 16,
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'List Name',
-                  border: OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onSubmitted: (v) => Navigator.pop(context, v),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(context, controller.text),
-                      child: Text(confirmLabel),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _createList() async {
-    final result = await _showListNameSheet(
+    final result = await showListNameSheet(
+      context,
       title: 'New List',
       confirmLabel: 'Create',
     );
@@ -109,14 +47,15 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
   }
 
   Future<void> _renameList(SongList list) async {
-    if (list.name == 'Default List') {
+    if (list.isDefault) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot rename default list')),
       );
       return;
     }
 
-    final result = await _showListNameSheet(
+    final result = await showListNameSheet(
+      context,
       title: 'Rename List',
       confirmLabel: 'Rename',
       initialValue: list.name,
@@ -136,33 +75,20 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
   }
 
   Future<void> _deleteList(SongList list) async {
-    if (list.name == 'Default List') {
+    if (list.isDefault) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot delete default list')),
       );
       return;
     }
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete List'),
-        content: Text('Are you sure you want to delete "${list.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final confirmed = await confirmDelete(
+      context,
+      title: 'Delete List',
+      message: 'Are you sure you want to delete "${list.name}"?',
     );
 
-    if (confirm == true) {
+    if (confirmed) {
       await _db.deleteSongList(list.id!);
       _loadLists();
       if (mounted) {
@@ -171,24 +97,6 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
         ).showSnackBar(SnackBar(content: Text('${list.name} deleted')));
       }
     }
-  }
-
-  Widget _buildCompactActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    return IconButton(
-      constraints: _compactActionConstraints,
-      padding: EdgeInsets.zero,
-      splashRadius: 18,
-      visualDensity: VisualDensity.compact,
-      icon: Icon(icon, size: 18),
-      color: color,
-      tooltip: tooltip,
-      onPressed: onPressed,
-    );
   }
 
   @override
@@ -210,44 +118,29 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
-                    // contentPadding: const EdgeInsets.symmetric(
-                    //   horizontal: 16,
-                    //   vertical: 8,
-                    // ),
-                    // leading: CircleAvatar(
-                    //   backgroundColor: Theme.of(
-                    //     context,
-                    //   ).colorScheme.primary.withOpacity(0.1),
-                    //   child: Icon(
-                    //     list.name == 'Default List'
-                    //         ? Icons.star
-                    //         : Icons.playlist_play,
-                    //     color: Theme.of(context).colorScheme.primary,
-                    //   ),
-                    // ),
                     title: Text(
                       list.name,
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    trailing: list.name != 'Default List'
-                        ? Row(
+                    trailing: list.isDefault
+                        ? null
+                        : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildCompactActionButton(
+                              CompactActionButton(
                                 icon: Icons.edit,
                                 color: Colors.blue,
                                 tooltip: 'Rename list',
                                 onPressed: () => _renameList(list),
                               ),
-                              _buildCompactActionButton(
+                              CompactActionButton(
                                 icon: Icons.delete,
                                 color: Colors.red,
                                 tooltip: 'Delete list',
                                 onPressed: () => _deleteList(list),
                               ),
                             ],
-                          )
-                        : null,
+                          ),
                     onTap: () async {
                       await Navigator.push(
                         context,

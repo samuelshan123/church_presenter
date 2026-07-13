@@ -185,41 +185,47 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final color = _colorFor(ctrl.status, cs);
-    final w = MediaQuery.of(context).size.width;
-    final double iconSz = w < 360 ? 22 : 28;
-    final double textSz = w < 360 ? 13 : (w > 600 ? 17 : 15);
-    final double pad = w < 360 ? 14 : 20;
 
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(pad),
-        child: Row(
-          children: [
-            ctrl.isSyncing
-                ? SizedBox.square(
-                    dimension: iconSz,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: cs.primary,
-                    ),
-                  )
-                : Icon(_iconFor(ctrl.status), size: iconSz, color: color),
-            SizedBox(width: w < 360 ? 10 : 16),
-            Expanded(
-              child: Text(
-                ctrl.statusMessage,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final double iconSz = w < 360 ? 22 : 28;
+        final double textSz = w < 360 ? 13 : (w > 600 ? 17 : 15);
+        final double pad = w < 360 ? 14 : 20;
+
+        return Card(
+          child: Padding(
+            padding: EdgeInsets.all(pad),
+            child: Row(
+              children: [
+                ctrl.isSyncing
+                    ? SizedBox.square(
+                        dimension: iconSz,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: cs.primary,
+                        ),
+                      )
+                    : Icon(_iconFor(ctrl.status), size: iconSz, color: color),
+                SizedBox(width: w < 360 ? 10 : 16),
+                Expanded(
+                  child: Text(
+                    ctrl.statusMessage,
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       color: color,
                       fontWeight: FontWeight.w500,
                       fontSize: textSz,
                     ),
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -239,6 +245,9 @@ class _StatsGrid extends StatelessWidget {
       _StatItem('Inserted', stats.insertedSongs, Icons.playlist_add),
     ];
 
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
@@ -257,44 +266,42 @@ class _StatsGrid extends StatelessWidget {
           crossAxisSpacing: 8,
           childAspectRatio: ratio,
           children: items
-          .map(
-            (item) => Card(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: vPad, horizontal: hPad),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(item.icon,
-                        size: iconSz,
-                        color: Theme.of(context).colorScheme.primary),
-                    SizedBox(height: w < 360 ? 4 : 6),
-                    Text(
-                      '${item.value}',
-                      style:
-                          Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: valSz,
-                              ),
+              .map(
+                (item) => Card(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: vPad,
+                      horizontal: hPad,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.label,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(item.icon, size: iconSz, color: cs.primary),
+                        SizedBox(height: w < 360 ? 4 : 6),
+                        Text(
+                          '${item.value}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: valSz,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          item.label,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant,
                             fontSize: lblSz,
                           ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          )
-          .toList(),
+              )
+              .toList(),
         );
       },
     );
@@ -316,38 +323,45 @@ class _BucketProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = total == 0 ? 0.0 : fetched / total;
-    final w = MediaQuery.of(context).size.width;
-    final double lblSz = w < 360 ? 10 : (w > 600 ? 14 : 12);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final theme = Theme.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final double lblSz = w < 360 ? 10 : (w > 600 ? 14 : 12);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Buckets downloaded',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(fontSize: lblSz),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Buckets downloaded',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontSize: lblSz,
+                  ),
+                ),
+                Text(
+                  '$fetched / $total',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: lblSz,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              '$fetched / $total',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelMedium
-                  ?.copyWith(fontWeight: FontWeight.bold, fontSize: lblSz),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              ),
             ),
           ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 8,
-            backgroundColor:
-                Theme.of(context).colorScheme.surfaceContainerHighest,
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -444,25 +458,31 @@ class _LastSyncedRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final double sz = w < 360 ? 10 : (w > 600 ? 14 : 12);
-    final double iconSz = w < 360 ? 15 : 18;
-    return Row(
-      children: [
-        Icon(Icons.history, size: iconSz),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            lastSyncedAt == null
-                ? 'Never synced'
-                : 'Last synced: ${_format(lastSyncedAt!)}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+    final theme = Theme.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final double sz = w < 360 ? 10 : (w > 600 ? 14 : 12);
+        final double iconSz = w < 360 ? 15 : 18;
+        return Row(
+          children: [
+            Icon(Icons.history, size: iconSz),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                lastSyncedAt == null
+                    ? 'Never synced'
+                    : 'Last synced: ${_format(lastSyncedAt!)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontSize: sz,
                 ),
-          ),
-        ),
-      ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

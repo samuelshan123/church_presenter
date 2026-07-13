@@ -8,6 +8,8 @@ import '../../../../../services/web_search_service.dart';
 import '../../../../widgets/broadcast_info_banner.dart';
 import '../../../../widgets/broadcast_control_bar.dart';
 import '../../../../widgets/presenter_settings_panel.dart';
+import '../../utils/section_broadcast_controller.dart';
+import '../../utils/song_section_parser.dart';
 
 class WebSongDetailScreen extends StatefulWidget {
   final String title;
@@ -25,13 +27,13 @@ class WebSongDetailScreen extends StatefulWidget {
   State<WebSongDetailScreen> createState() => _WebSongDetailScreenState();
 }
 
-class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
+class _WebSongDetailScreenState extends State<WebSongDetailScreen>
+    with SectionBroadcastController<WebSongDetailScreen> {
   final DatabaseHelper _db = DatabaseHelper.instance;
   final _searchService = WebSearchService();
   late final TextEditingController _titleController;
   late final TextEditingController _lyricsController;
 
-  int? _selectedSectionIndex;
   List<String> _displaySections = [];
 
   bool _loadingLyrics = true;
@@ -42,6 +44,12 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
   bool _saving = false;
 
   @override
+  ServerService? get serverService => widget.serverService;
+
+  @override
+  List<String> get sections => _displaySections;
+
+  @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.title);
@@ -49,10 +57,12 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
     _lyricsController.addListener(_rebuildSections);
     _checkLocalDb();
     _fetchLyrics();
+    initSectionBroadcastListener();
   }
 
   @override
   void dispose() {
+    disposeSectionBroadcastListener();
     _titleController.dispose();
     _lyricsController.dispose();
     super.dispose();
@@ -89,41 +99,10 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
 
   void _rebuildSections() {
     final content = _lyricsController.text.trim();
-    var sections = content
-        .split('\n\n')
-        .where((s) => s.trim().isNotEmpty)
-        .map((s) => s.trim())
-        .toList();
-
-    if (sections.length <= 1) {
-      sections = content
-          .split('\n')
-          .where((l) => l.trim().isNotEmpty)
-          .map((l) => l.trim())
-          .toList();
-    }
-
-    final hasTamil = RegExp(r'[\u0B80-\u0BFF]').hasMatch(content);
-    if (hasTamil) {
-      final filtered = <String>[];
-      for (final section in sections) {
-        final lines = section.split('\n');
-        final kept = lines
-            .where((l) => !_isEnglishOnlyLine(l))
-            .toList();
-        final cleaned = kept.join('\n').trim();
-        if (cleaned.isNotEmpty) filtered.add(cleaned);
-      }
-      setState(() => _displaySections = filtered);
-    } else {
-      setState(() => _displaySections = sections);
-    }
-  }
-
-  bool _isEnglishOnlyLine(String line) {
-    final t = line.trim();
-    if (t.isEmpty) return false;
-    return RegExp(r'^[\x00-\x7F]+$').hasMatch(t);
+    final parsed = parseSongSections(content);
+    setState(() {
+      _displaySections = stripEnglishOnlyLinesIfTamil(parsed, content);
+    });
   }
 
   // ── db helpers ─────────────────────────────────────────────────────────────
@@ -170,10 +149,7 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
     setState(() => _saving = true);
     try {
       final song = Song(title: title, content: content);
-      final created = await _db.createSong(song);
-      if (listId != null && created.id != null) {
-        await _db.addSongToList(listId, created.id!);
-      }
+      await _db.createSongAndOptionallyAddToList(song, listId);
       if (mounted) {
         setState(() {
           _saving = false;
@@ -188,50 +164,6 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  // ── broadcast helpers ──────────────────────────────────────────────────────
-
-  void _selectSection(int index) {
-    setState(() => _selectedSectionIndex = index);
-    if (widget.serverService != null && widget.serverService!.isRunning) {
-      widget.serverService!.sendMessage(_displaySections[index], 'song', {});
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(
-      //     content: Text('📡 Section broadcasted to all devices'),
-      //     duration: Duration(seconds: 1),
-      //   ),
-      // );
-    }
-  }
-
-  void _nextSection() {
-    if (_selectedSectionIndex == null) {
-      _selectSection(0);
-    } else if (_selectedSectionIndex! < _displaySections.length - 1) {
-      _selectSection(_selectedSectionIndex! + 1);
-    }
-  }
-
-  void _previousSection() {
-    if (_selectedSectionIndex == null) {
-      _selectSection(0);
-    } else if (_selectedSectionIndex! > 0) {
-      _selectSection(_selectedSectionIndex! - 1);
-    }
-  }
-
-  void _clearBroadcast() {
-    setState(() => _selectedSectionIndex = null);
-    if (widget.serverService != null && widget.serverService!.isRunning) {
-      widget.serverService!.sendMessage('', 'song', {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🔲 Display cleared'),
-          duration: Duration(seconds: 1),
-        ),
-      );
     }
   }
 
@@ -265,13 +197,11 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
             ),
           if (serverActive)
             BroadcastControlBar(
-              onPrevious: _previousSection,
-              onNext: _nextSection,
-              onClear: _clearBroadcast,
-              hasPrevious:
-                  _selectedSectionIndex != null && _selectedSectionIndex! > 0,
-              hasNext: _selectedSectionIndex != null &&
-                  _selectedSectionIndex! < _displaySections.length - 1,
+              onPrevious: previousSection,
+              onNext: nextSection,
+              onClear: clearBroadcast,
+              hasPrevious: hasPreviousSection,
+              hasNext: hasNextSection,
             ),
           Expanded(
             child: SingleChildScrollView(
@@ -415,9 +345,9 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _displaySections.length,
                       itemBuilder: (context, index) {
-                        final isSelected = _selectedSectionIndex == index;
+                        final isSelected = selectedSectionIndex == index;
                         return GestureDetector(
-                          onTap: () => _selectSection(index),
+                          onTap: () => selectSection(index),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             margin: const EdgeInsets.only(bottom: 12),
