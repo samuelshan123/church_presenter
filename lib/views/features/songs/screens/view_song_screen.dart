@@ -128,9 +128,13 @@ void _parseSections() {
 
     if (!mounted) return;
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => _AddToListDialog(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => _AddToListSheet(
         songId: song.id!,
         lists: lists,
         initialMembership: membership,
@@ -234,13 +238,13 @@ void _parseSections() {
   }
 }
 
-class _AddToListDialog extends StatefulWidget {
+class _AddToListSheet extends StatefulWidget {
   final int songId;
   final List<SongList> lists;
   final Map<int, bool> initialMembership;
   final DatabaseHelper db;
 
-  const _AddToListDialog({
+  const _AddToListSheet({
     required this.songId,
     required this.lists,
     required this.initialMembership,
@@ -248,10 +252,10 @@ class _AddToListDialog extends StatefulWidget {
   });
 
   @override
-  State<_AddToListDialog> createState() => _AddToListDialogState();
+  State<_AddToListSheet> createState() => _AddToListSheetState();
 }
 
-class _AddToListDialogState extends State<_AddToListDialog> {
+class _AddToListSheetState extends State<_AddToListSheet> {
   late List<SongList> _lists;
   late Map<int, bool> _membership;
 
@@ -292,29 +296,60 @@ class _AddToListDialogState extends State<_AddToListDialog> {
 
   Future<void> _createAndAddToList() async {
     final controller = TextEditingController();
-    final name = await showDialog<String>(
+    final name = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('New List'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'List Name',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-          onSubmitted: (v) => Navigator.pop(context, v),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'New List',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'List Name',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+                onSubmitted: (v) => Navigator.pop(context, v),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      child: const Text('Create'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Create'),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -342,45 +377,59 @@ class _AddToListDialogState extends State<_AddToListDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add to List'),
-      contentPadding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
-      content: SizedBox(
-        width: double.maxFinite,
+    return SafeArea(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_lists.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: Text('No lists yet. Create one below.'),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _lists.length,
-                itemBuilder: (context, index) {
-                  final list = _lists[index];
-                  final inList = _membership[list.id!] ?? false;
-                  return ListTile(
-                    leading: Icon(
-                      list.name == 'Favorite Songs'
-                          ? Icons.star
-                          : Icons.playlist_play,
-                      color: Theme.of(context).colorScheme.primary,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Add to List',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    title: Text(list.name),
-                    trailing: inList
-                        ? Icon(
-                            Icons.check_circle,
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : const Icon(Icons.add_circle_outline),
-                    onTap: () => _toggleList(list),
-                  );
-                },
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Done'),
+                  ),
+                ],
               ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: _lists.isEmpty
+                  ? const Center(
+                      child: Text('No lists yet. Create one below.'),
+                    )
+                  : ListView.builder(
+                      itemCount: _lists.length,
+                      itemBuilder: (context, index) {
+                        final list = _lists[index];
+                        final inList = _membership[list.id!] ?? false;
+                        return ListTile(
+                          leading: Icon(
+                            list.name == 'Favorite Songs'
+                                ? Icons.star
+                                : Icons.playlist_play,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          title: Text(list.name),
+                          trailing: inList
+                              ? Icon(
+                                  Icons.check_circle,
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
+                              : const Icon(Icons.add_circle_outline),
+                          onTap: () => _toggleList(list),
+                        );
+                      },
+                    ),
+            ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.create_new_folder_outlined),
@@ -390,12 +439,6 @@ class _AddToListDialogState extends State<_AddToListDialog> {
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
-        ),
-      ],
     );
   }
 }

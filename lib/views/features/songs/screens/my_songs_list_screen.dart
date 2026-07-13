@@ -35,31 +35,71 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
     });
   }
 
-  Future<void> _createList() async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
+  Future<String?> _showListNameSheet({
+    required String title,
+    required String confirmLabel,
+    String initialValue = '',
+  }) {
+    final controller = TextEditingController(text: initialValue);
+    return showModalBottomSheet<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('New List'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'List Name',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Create'),
-          ),
-        ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'List Name',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+                onSubmitted: (v) => Navigator.pop(context, v),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      child: Text(confirmLabel),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _createList() async {
+    final result = await _showListNameSheet(
+      title: 'New List',
+      confirmLabel: 'Create',
     );
 
     if (result != null && result.isNotEmpty) {
@@ -76,30 +116,10 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
       return;
     }
 
-    final controller = TextEditingController(text: list.name);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rename List'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'List Name',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Rename'),
-          ),
-        ],
-      ),
+    final result = await _showListNameSheet(
+      title: 'Rename List',
+      confirmLabel: 'Rename',
+      initialValue: list.name,
     );
 
     if (result != null && result.isNotEmpty && result != list.name) {
