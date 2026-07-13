@@ -1,7 +1,9 @@
 name: church_presenter
-description: "A new Flutter project."
+description: "A Flutter application for church presentation and Bible, songs, and hymns."
 publish_to: 'none'
-version: 0.1.0
+
+
+version: 0.1.0+1
 
 environment:
   sdk: ^3.8.1
@@ -28,6 +30,7 @@ dependencies:
   html: ^0.15.5
   crypto: ^3.0.3
   share_plus: ^13.1.0
+  package_info_plus: ^10.2.0
 
 dev_dependencies:
   flutter_test:

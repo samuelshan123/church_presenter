@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../services/presenter_config_service.dart';
 import '../../services/server_service.dart';
@@ -11,7 +12,7 @@ import 'presenter/screens/presenter_screen.dart';
 import 'settings_screen.dart';
 import 'songs/screens/songs_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final ThemeService themeService;
   final ServerService serverService;
   final PresenterConfigService presenterConfig;
@@ -24,7 +25,31 @@ class HomeScreen extends StatelessWidget {
   });
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String? _versionLabel;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _versionLabel = 'v${info.version}(${info.buildNumber})';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final themeService = widget.themeService;
+    final serverService = widget.serverService;
+    final presenterConfig = widget.presenterConfig;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final actions = [
@@ -66,7 +91,19 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
-        title: const Text('Church Presenter'),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Church Presenter'),
+            if (_versionLabel != null)
+              Text(
+                _versionLabel!,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+          ],
+        ),
         centerTitle: true,
         elevation: 0,
         flexibleSpace: Container(
