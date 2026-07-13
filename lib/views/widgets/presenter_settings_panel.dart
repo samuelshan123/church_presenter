@@ -33,38 +33,64 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
         ? (widget.presenterConfig.bgColorValue ?? Colors.black)
         : (widget.presenterConfig.fgColorValue ?? Colors.white);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          isBackground ? 'Pick Background Color' : 'Pick Text Color',
-        ),
-        content: SingleChildScrollView(
-          child: ColorPicker(
-            pickerColor: currentColor,
-            onColorChanged: (color) => currentColor = color,
-            pickerAreaHeightPercent: 0.8,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isBackground ? 'Pick Background Color' : 'Pick Text Color',
+                style: Theme.of(ctx).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: ColorPicker(
+                    pickerColor: currentColor,
+                    onColorChanged: (color) => currentColor = color,
+                    pickerAreaHeightPercent: 0.8,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        final hex = widget.presenterConfig.colorToHex(
+                          currentColor,
+                        );
+                        if (isBackground) {
+                          widget.presenterConfig.setBgColor(hex);
+                        } else {
+                          widget.presenterConfig.setFgColor(hex);
+                        }
+                        Navigator.of(ctx).pop();
+                      },
+                      child: const Text('Select'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final hex =
-                  widget.presenterConfig.colorToHex(currentColor);
-              if (isBackground) {
-                widget.presenterConfig.setBgColor(hex);
-              } else {
-                widget.presenterConfig.setFgColor(hex);
-              }
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Select'),
-          ),
-        ],
       ),
     );
   }
@@ -209,26 +235,48 @@ class _ColorSwatch extends StatelessWidget {
   }
 }
 
-/// Shows a quick-access presenter settings dialog.
+/// Shows a quick-access presenter settings bottom sheet.
 /// Call from any screen that imports this file.
 void showPresenterSettingsDialog(
   BuildContext context,
   PresenterConfigService presenterConfig,
 ) {
-  showDialog(
+  showModalBottomSheet(
     context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Presenter Settings'),
-      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      content: SingleChildScrollView(
-        child: PresenterSettingsPanel(presenterConfig: presenterConfig),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Presenter Settings',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: SingleChildScrollView(
+                child: PresenterSettingsPanel(presenterConfig: presenterConfig),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     ),
   );
 }
