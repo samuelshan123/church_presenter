@@ -13,6 +13,9 @@ import 'package:share_plus/share_plus.dart';
 import '../../../widgets/broadcast_info_banner.dart';
 import '../../../widgets/broadcast_control_bar.dart';
 import '../../../widgets/presenter_settings_panel.dart';
+import '../utils/bible_book_utils.dart';
+import '../utils/selection_decoration.dart';
+import '../widgets/grid_selector_dialog.dart';
 
 class BibleViewBookScreen extends StatefulWidget {
   final BibleBook book;
@@ -162,72 +165,16 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
   }
 
   void _showChapterSelector() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Chapter'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1.4,
-              ),
-              itemCount: _totalChapters,
-              itemBuilder: (context, index) {
-                final chapter = index + 1;
-                final isSelected = chapter == _currentChapter;
-                return InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      _currentChapter = chapter;
-                    });
-                    _loadChapterData();
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$chapter',
-                      style: TextStyle(
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.onPrimaryContainer
-                            : null,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
+    showGridSelectorDialog(
+      context,
+      title: 'Select Chapter',
+      itemCount: _totalChapters,
+      isSelectedIndex: (index) => index + 1 == _currentChapter,
+      onSelectedIndex: (index) {
+        setState(() {
+          _currentChapter = index + 1;
+        });
+        _loadChapterData();
       },
     );
   }
@@ -421,81 +368,23 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
 
   void _showVerseSelector() {
     if (_verses.isEmpty) return;
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Verse'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1.4,
-              ),
-              itemCount: _verses.length,
-              itemBuilder: (context, index) {
-                final verseNum = _verses[index].verseNumber;
-                final isSelected = index == _selectedVerseIndex;
-                return InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                    _selectVerse(index);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$verseNum',
-                      style: TextStyle(
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.onPrimaryContainer
-                            : null,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
+    showGridSelectorDialog(
+      context,
+      title: 'Select Verse',
+      itemCount: _verses.length,
+      labelForIndex: (index) => '${_verses[index].verseNumber}',
+      isSelectedIndex: (index) => index == _selectedVerseIndex,
+      onSelectedIndex: _selectVerse,
     );
   }
 
   void _navigateToHistoryEntry(Map<String, dynamic> entry) {
-    final bookEnglish = entry['bookEnglish'] as String;
-    final bookTamil = entry['bookTamil'] as String;
     final chapter = entry['chapter'] as int;
     final verseNumber = entry['verseNumber'] as int;
-    final book = _allBooks.firstWhere(
-      (b) => b.english == bookEnglish,
-      orElse: () => BibleBook(english: bookEnglish, tamil: bookTamil),
+    final book = resolveBookFromHistory(
+      _allBooks,
+      bookEnglish: entry['bookEnglish'] as String,
+      bookTamil: entry['bookTamil'] as String,
     );
     setState(() {
       _currentBook = book;
@@ -722,13 +611,9 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.outlineVariant,
-                              width: isSelected ? 2 : 1.5,
+                            border: selectionBorder(
+                              context,
+                              isSelected: isSelected,
                             ),
                           ),
                           child: Row(
@@ -784,16 +669,7 @@ class _BookSelectorSheetState extends State<_BookSelectorSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final query = _query.trim().toLowerCase();
-    final filteredBooks = query.isEmpty
-        ? widget.allBooks
-        : widget.allBooks
-              .where(
-                (book) =>
-                    book.english.toLowerCase().contains(query) ||
-                    book.tamil.toLowerCase().contains(query),
-              )
-              .toList();
+    final filteredBooks = filterBooksByQuery(widget.allBooks, _query);
 
     return SafeArea(
       child: SizedBox(

@@ -4,6 +4,7 @@ import '../../../../services/bible_service.dart';
 import '../../../../services/server_service.dart';
 import '../../../../db/models/bible_book.dart';
 import '../../../widgets/presenter_settings_panel.dart';
+import '../utils/bible_book_utils.dart';
 import '../widgets/bible_verse_history_button.dart';
 import 'bible_view_book_screen.dart';
 
@@ -24,17 +25,8 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
   bool _isLoading = true;
   String? _error;
 
-  List<BibleBook> get _filteredBooks {
-    final query = _searchQuery.trim().toLowerCase();
-    if (query.isEmpty) return _books;
-    return _books
-        .where(
-          (book) =>
-              book.english.toLowerCase().contains(query) ||
-              book.tamil.toLowerCase().contains(query),
-        )
-        .toList();
-  }
+  List<BibleBook> get _filteredBooks =>
+      filterBooksByQuery(_books, _searchQuery);
 
   @override
   void initState() {
@@ -89,13 +81,12 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
   }
 
   void _openHistoryEntry(Map<String, dynamic> entry) {
-    final bookEnglish = entry['bookEnglish'] as String;
-    final bookTamil = entry['bookTamil'] as String;
     final chapter = entry['chapter'] as int;
     final verseNumber = entry['verseNumber'] as int;
-    final book = _books.firstWhere(
-      (b) => b.english == bookEnglish,
-      orElse: () => BibleBook(english: bookEnglish, tamil: bookTamil),
+    final book = resolveBookFromHistory(
+      _books,
+      bookEnglish: entry['bookEnglish'] as String,
+      bookTamil: entry['bookTamil'] as String,
     );
 
     _openBook(book, initialChapter: chapter, initialVerseNumber: verseNumber);

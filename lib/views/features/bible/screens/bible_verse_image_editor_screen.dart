@@ -7,6 +7,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../utils/selection_decoration.dart';
 
 class BibleVerseImageEditorScreen extends StatefulWidget {
   final String bookName;
@@ -430,11 +431,10 @@ class _BibleVerseImageEditorScreenState
                 end: Alignment.bottomRight,
                 colors: [template.colors.first, template.colors.last],
               ),
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.outlineVariant,
-                width: isSelected ? 3 : 1.5,
+              border: selectionBorder(
+                context,
+                isSelected: isSelected,
+                selectedWidth: 3,
               ),
               boxShadow: isSelected
                   ? [
@@ -466,11 +466,10 @@ class _BibleVerseImageEditorScreenState
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.outlineVariant,
-                width: isSelected ? 3 : 1.5,
+              border: selectionBorder(
+                context,
+                isSelected: isSelected,
+                selectedWidth: 3,
               ),
             ),
             child: color.computeLuminance() > 0.75

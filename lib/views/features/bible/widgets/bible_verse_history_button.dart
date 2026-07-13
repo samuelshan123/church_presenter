@@ -1,5 +1,6 @@
 import 'package:church_presenter/db/database_helper.dart';
 import 'package:flutter/material.dart';
+import '../utils/bible_history_format.dart';
 
 typedef BibleVerseHistoryEntrySelected =
     void Function(Map<String, dynamic> entry);
@@ -32,57 +33,6 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
       return;
     }
 
-    String formatDayLabel(String dayKey) {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final yesterday = today.subtract(const Duration(days: 1));
-      final parts = dayKey.split('-');
-      final d = DateTime(
-        int.parse(parts[0]),
-        int.parse(parts[1]),
-        int.parse(parts[2]),
-      );
-      if (d == today) return 'Today';
-      if (d == yesterday) return 'Yesterday';
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      final month = months[d.month - 1];
-      if (d.year == now.year) return '$month ${d.day}';
-      return '$month ${d.day}, ${d.year}';
-    }
-
-    String formatTime(String timestamp) {
-      final dt = DateTime.parse(timestamp).toLocal();
-      final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-      final m = dt.minute.toString().padLeft(2, '0');
-      final period = dt.hour >= 12 ? 'PM' : 'AM';
-      return '$h:$m $period';
-    }
-
-    Map<String, List<Map<String, dynamic>>> buildGrouped(bool newestFirst) {
-      final entries = newestFirst ? verseHistory : verseHistory.reversed;
-      final grouped = <String, List<Map<String, dynamic>>>{};
-      for (final entry in entries) {
-        final dt = DateTime.parse(entry['timestamp'] as String).toLocal();
-        final dayKey =
-            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
-        grouped.putIfAbsent(dayKey, () => []).add(entry);
-      }
-      return grouped;
-    }
-
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -92,7 +42,10 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            final grouped = buildGrouped(_historySortNewest);
+            final grouped = groupHistoryByDay(
+              verseHistory,
+              newestFirst: _historySortNewest,
+            );
             final days = grouped.keys.toList();
             return SafeArea(
               child: SizedBox(
@@ -155,7 +108,7 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
                                   vertical: 8,
                                 ),
                                 child: Text(
-                                  formatDayLabel(day),
+                                  formatHistoryDayLabel(day),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Theme.of(
@@ -174,7 +127,9 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
                                     ),
                                   ),
                                   trailing: Text(
-                                    formatTime(entry['timestamp'] as String),
+                                    formatHistoryTime(
+                                      entry['timestamp'] as String,
+                                    ),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Theme.of(
