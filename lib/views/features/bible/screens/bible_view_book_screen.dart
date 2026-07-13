@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../widgets/broadcast_info_banner.dart';
 import '../../../widgets/broadcast_control_bar.dart';
 import '../../../widgets/presenter_settings_panel.dart';
+import '../../../widgets/search_input_decoration.dart';
 import '../utils/bible_book_utils.dart';
 import '../utils/selection_decoration.dart';
 import '../widgets/grid_selector_dialog.dart';
@@ -693,25 +694,13 @@ class _BookSelectorSheetState extends State<_BookSelectorSheet> {
                 controller: _searchController,
                 autofocus: true,
                 onChanged: (value) => setState(() => _query = value),
-                decoration: InputDecoration(
-                  hintText: 'Search books (Tamil or English)',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _query.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                          },
-                        ),
-                  isDense: true,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: searchInputDecoration(
+                  hintText: 'Search books',
+                  hasValue: _query.isNotEmpty,
+                  onClear: () {
+                    _searchController.clear();
+                    setState(() => _query = '');
+                  },
                 ),
               ),
             ),

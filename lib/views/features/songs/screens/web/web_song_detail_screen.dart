@@ -226,12 +226,9 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                           const SizedBox(height: 12),
                           TextField(
                             controller: _titleController,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               hintText: 'Song title',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              prefixIcon: const Icon(Icons.title),
+                              prefixIcon: Icon(Icons.title),
                             ),
                             textCapitalization: TextCapitalization.words,
                           ),
@@ -302,11 +299,8 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                           else
                             TextField(
                               controller: _lyricsController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Song lyrics',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
                                 alignLabelWithHint: true,
                               ),
                               maxLines: null,

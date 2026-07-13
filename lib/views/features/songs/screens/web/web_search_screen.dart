@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../services/web_search_service.dart';
 import '../../../../../services/server_service.dart';
+import '../../../../widgets/search_input_decoration.dart';
 import 'web_song_detail_screen.dart';
 
 class WebSearchScreen extends StatefulWidget {
@@ -102,21 +103,10 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
               controller: _searchController,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _search(),
-              decoration: InputDecoration(
+              decoration: searchInputDecoration(
                 hintText: 'Search Tamil Christian songs…',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: hasText
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => _searchController.clear(),
-                        tooltip: 'Clear',
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                hasValue: hasText,
+                onClear: () => _searchController.clear(),
               ),
             ),
           ),

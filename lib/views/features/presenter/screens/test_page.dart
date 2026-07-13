@@ -116,13 +116,10 @@ class _TestPageState extends State<TestPage> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _inputController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Message',
                 hintText: 'Type your message here...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.message),
+                prefixIcon: Icon(Icons.message),
               ),
               enabled: widget.serverService.isRunning,
               minLines: 3,

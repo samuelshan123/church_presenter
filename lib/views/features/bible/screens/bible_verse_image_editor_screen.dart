@@ -772,7 +772,6 @@ class _BibleVerseImageEditorScreenState
                             textAlignVertical: TextAlignVertical.top,
                             decoration: const InputDecoration(
                               hintText: 'Edit verse text',
-                              border: OutlineInputBorder(),
                               alignLabelWithHint: true,
                             ),
                             onChanged: (value) {

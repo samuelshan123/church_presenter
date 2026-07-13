@@ -27,6 +27,30 @@ void main() {
   runApp(const MainApp());
 }
 
+/// App-wide text field styling — every [TextField]/[TextFormField] should
+/// inherit this instead of specifying its own `border`/`filled`, so inputs
+/// look consistent across screens.
+InputDecorationTheme _buildInputDecorationTheme(ColorScheme colorScheme) {
+  final radius = BorderRadius.circular(12);
+  OutlineInputBorder borderWith(Color color, {double width = 1.5}) =>
+      OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: color, width: width),
+      );
+
+  return InputDecorationTheme(
+    filled: true,
+    fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+    border: borderWith(colorScheme.outlineVariant),
+    enabledBorder: borderWith(colorScheme.outlineVariant),
+    focusedBorder: borderWith(colorScheme.primary, width: 2),
+    errorBorder: borderWith(colorScheme.error),
+    focusedErrorBorder: borderWith(colorScheme.error, width: 2),
+    disabledBorder: borderWith(colorScheme.outlineVariant.withValues(alpha: 0.5)),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  );
+}
+
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
@@ -106,6 +130,12 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               color: Colors.deepPurple,
             ),
           ),
+          inputDecorationTheme: _buildInputDecorationTheme(
+            ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.light,
+            ),
+          ),
         ),
         darkTheme: ThemeData(
           useMaterial3: true,
@@ -126,6 +156,12 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             titleTextStyle: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
+            ),
+          ),
+          inputDecorationTheme: _buildInputDecorationTheme(
+            ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
             ),
           ),
         ),

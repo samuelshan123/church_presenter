@@ -118,13 +118,10 @@ class _AddEditSongScreenState extends State<AddEditSongScreen> {
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _titleController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Title',
                                 hintText: 'Enter song title',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: const Icon(Icons.title),
+                                prefixIcon: Icon(Icons.title),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
@@ -153,12 +150,9 @@ class _AddEditSongScreenState extends State<AddEditSongScreen> {
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _contentController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Content',
                                 hintText: 'Enter song lyrics or content',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
                                 alignLabelWithHint: true,
                               ),
                               validator: (value) {

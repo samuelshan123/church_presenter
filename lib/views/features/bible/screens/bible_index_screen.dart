@@ -4,6 +4,7 @@ import '../../../../services/bible_service.dart';
 import '../../../../services/server_service.dart';
 import '../../../../db/models/bible_book.dart';
 import '../../../widgets/presenter_settings_panel.dart';
+import '../../../widgets/search_input_decoration.dart';
 import '../utils/bible_book_utils.dart';
 import '../widgets/bible_verse_history_button.dart';
 import 'bible_view_book_screen.dart';
@@ -114,25 +115,13 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: (value) => setState(() => _searchQuery = value),
-              decoration: InputDecoration(
+              decoration: searchInputDecoration(
                 hintText: 'Search books',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      ),
-                isDense: true,
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                hasValue: _searchQuery.isNotEmpty,
+                onClear: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
               ),
             ),
           ),

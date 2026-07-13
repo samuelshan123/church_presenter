@@ -19,14 +19,18 @@ class BroadcastControlBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const buttonPadding = EdgeInsets.symmetric(horizontal: 10, vertical: 6);
+    const labelStyle = TextStyle(fontSize: 13);
+    const iconSize = 16.0;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -37,30 +41,36 @@ class BroadcastControlBar extends StatelessWidget {
         children: [
           ElevatedButton.icon(
             onPressed: hasPrevious ? onPrevious : null,
-            icon: const Icon(Icons.arrow_back, size: 20),
-            label: const Text('Prev'),
+            icon: const Icon(Icons.arrow_back, size: iconSize),
+            label: const Text('Prev', style: labelStyle),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: buttonPadding,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: hasNext ? onNext : null,
-            icon: const Icon(Icons.arrow_forward, size: 20),
-            label: const Text('Next'),
+            icon: const Icon(Icons.arrow_forward, size: iconSize),
+            label: const Text('Next', style: labelStyle),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: buttonPadding,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
           const Spacer(),
           ElevatedButton.icon(
             onPressed: onClear,
-            icon: const Icon(Icons.clear, size: 20),
-            label: const Text('Clear'),
+            icon: const Icon(Icons.clear, size: iconSize),
+            label: const Text('Clear', style: labelStyle),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade400,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: buttonPadding,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
         ],

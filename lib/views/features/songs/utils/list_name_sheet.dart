@@ -33,10 +33,7 @@ Future<String?> showListNameSheet(
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'List Name',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'List Name'),
               autofocus: true,
               onSubmitted: (v) => Navigator.pop(context, v),
             ),
