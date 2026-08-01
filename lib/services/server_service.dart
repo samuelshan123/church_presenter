@@ -38,8 +38,19 @@ class ServerService extends ChangeNotifier {
   String get serverUrl => 'http://$_deviceIp:$port';
   List<String> get serverUrls =>
       _deviceIps.map((e) => 'http://${e.$2}:$port').toList();
-  List<({String label, String url})> get serverUrlsWithLabels =>
-      _deviceIps.map((e) => (label: e.$1, url: 'http://${e.$2}:$port')).toList();
+  /// Ranked best-first: the first entry is the address other devices on the
+  /// same network are most likely able to reach. [isRecommended] marks entries
+  /// that are genuine physical LAN adapters on a private-router range.
+  List<({String label, String url, bool isRecommended})>
+  get serverUrlsWithLabels => _deviceIps
+      .map(
+        (e) => (
+          label: e.$1,
+          url: 'http://${e.$2}:$port',
+          isRecommended: _ipScore(e) == 0,
+        ),
+      )
+      .toList();
   int get connectedClientsCount => _connectedClients.length;
 
   /// Service Handler
@@ -155,9 +166,7 @@ class ServerService extends ChangeNotifier {
   /// Start Server
   Future<bool> startServer() async {
     try {
-      final allIps = await _getAllLocalIps();
-      final wlanIps = allIps.where((e) => e.$1.startsWith('wlan')).toList();
-      _deviceIps = wlanIps.isNotEmpty ? wlanIps : allIps;
+      _deviceIps = _rankIps(await _getAllLocalIps());
       _deviceIp = _deviceIps.isNotEmpty ? _deviceIps.first.$2 : 'Unknown';
       _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, port);
       _isRunning = true;
@@ -246,6 +255,86 @@ class ServerService extends ChangeNotifier {
 
     notifyListeners();
     print('📤 Broadcast to ${_connectedClients.length} clients: $message');
+  }
+
+  /// Interface name prefixes that are real physical LAN adapters. Devices on
+  /// the same Wi-Fi/router can reach these; everything else is virtual.
+  static const _physicalPrefixes = [
+    'en', // macOS / iOS ethernet + Wi-Fi
+    'wlan', // Android / Linux Wi-Fi
+    'eth', // Linux ethernet
+    'wi-fi', // Windows
+    'ethernet', // Windows
+  ];
+
+  /// Mobile data. Physical and often on a private range, but nobody on the
+  /// church Wi-Fi can route to it — always rank below a real LAN adapter.
+  static const _cellularPrefixes = ['rmnet', 'pdp_ip', 'ccmni'];
+
+  /// Interface name prefixes that are virtual: VPN tunnels, VM/container
+  /// bridges, AirDrop/AWDL, and Apple-internal adapters. The server does listen
+  /// on these, but other devices on the LAN have no route to them.
+  static const _virtualPrefixes = [
+    'utun', 'tun', 'tap', 'ppp', 'ipsec', // VPN tunnels
+    'bridge', 'vboxnet', 'vmnet', 'docker', 'veth', // VMs / containers
+    'awdl', 'llw', // AirDrop / AWDL
+    'ap', 'anpi', // hotspot / Apple internal
+  ];
+
+  /// Score an interface+address pair — lower sorts first. The top-ranked
+  /// address is the one most likely reachable by every device on the network.
+  int _ipScore((String, String) entry) {
+    final name = entry.$1.toLowerCase();
+    final addr = entry.$2;
+
+    // Tailscale and other CGNAT-range addresses look like ordinary IPs but are
+    // only reachable from inside the same tunnel — rank them with the virtuals.
+    final isCgnat = _isInCgnatRange(addr);
+    final isVirtual =
+        isCgnat || _virtualPrefixes.any((p) => name.startsWith(p));
+    final isCellular =
+        !isVirtual && _cellularPrefixes.any((p) => name.startsWith(p));
+    final isPhysical =
+        !isVirtual &&
+        !isCellular &&
+        _physicalPrefixes.any((p) => name.startsWith(p));
+
+    if (isPhysical && _isPrivateLan(addr)) return 0; // ideal: real LAN adapter
+    if (isPhysical) return 1; // physical, unusual range
+    if (!isVirtual && !isCellular && _isPrivateLan(addr)) return 2; // unknown
+    if (!isVirtual && !isCellular) return 3; // unknown name and range
+    if (isCellular) return 4; // mobile data — not on the local network
+    return 5; // VPN / VM / AirDrop
+  }
+
+  /// True for the private ranges a home/church router hands out.
+  bool _isPrivateLan(String addr) {
+    final parts = addr.split('.').map(int.tryParse).toList();
+    if (parts.length != 4 || parts.contains(null)) return false;
+    final a = parts[0]!, b = parts[1]!;
+    if (a == 192 && b == 168) return true;
+    if (a == 10) return true;
+    if (a == 172 && b >= 16 && b <= 31) return true;
+    return false;
+  }
+
+  /// 100.64.0.0/10 — carrier-grade NAT, used by Tailscale.
+  bool _isInCgnatRange(String addr) {
+    final parts = addr.split('.').map(int.tryParse).toList();
+    if (parts.length != 4 || parts.contains(null)) return false;
+    return parts[0] == 100 && parts[1]! >= 64 && parts[1]! <= 127;
+  }
+
+  /// Order addresses so the most publicly-reachable one is first. Nothing is
+  /// dropped — the UI shows the top pick and tucks the rest behind an expander,
+  /// so an unusual setup never leaves the user with no URL at all.
+  List<(String, String)> _rankIps(List<(String, String)> ips) {
+    final ranked = [...ips];
+    ranked.sort((a, b) {
+      final byScore = _ipScore(a).compareTo(_ipScore(b));
+      return byScore != 0 ? byScore : a.$1.compareTo(b.$1);
+    });
+    return ranked;
   }
 
   /// Get all local non-loopback IPv4 addresses with their interface names

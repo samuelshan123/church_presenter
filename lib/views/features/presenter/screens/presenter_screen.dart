@@ -13,6 +13,8 @@ class PresenterScreen extends StatefulWidget {
 }
 
 class _PresenterScreenState extends State<PresenterScreen> {
+  bool _showAllUrls = false;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +62,107 @@ class _PresenterScreenState extends State<PresenterScreen> {
     Clipboard.setData(ClipboardData(text: url));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('📋 Copied: $url')),
+    );
+  }
+
+  /// The primary URL plus, behind an expander, any other addresses this device
+  /// is listening on. Addresses arrive ranked best-first from ServerService.
+  List<Widget> _buildUrlSection() {
+    final urls = widget.serverService.serverUrlsWithLabels;
+    if (urls.isEmpty) return const [];
+
+    final primary = urls.first;
+    final others = urls.skip(1).toList();
+
+    return [
+      _buildUrlTile(primary, isPrimary: true),
+      if (others.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        InkWell(
+          onTap: () => setState(() => _showAllUrls = !_showAllUrls),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _showAllUrls
+                      ? 'Hide other addresses'
+                      : 'Other addresses (${others.length})',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                Icon(
+                  _showAllUrls ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: Colors.white70,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_showAllUrls) ...others.map((i) => _buildUrlTile(i)),
+      ],
+    ];
+  }
+
+  Widget _buildUrlTile(
+    ({String label, String url, bool isRecommended}) info, {
+    bool isPrimary = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: isPrimary ? 10 : 6,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: isPrimary ? 0.25 : 0.12),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isPrimary && info.isRecommended
+                        ? '${info.label} · Recommended'
+                        : info.label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isPrimary ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                  Text(
+                    info.url,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: isPrimary ? 18 : 13,
+                      color: isPrimary ? Colors.white : Colors.white70,
+                      fontWeight: isPrimary
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _copyUrl(info.url),
+              child: Icon(
+                Icons.copy,
+                size: isPrimary ? 20 : 16,
+                color: isPrimary ? Colors.white : Colors.white70,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -132,55 +235,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     ),
                     if (widget.serverService.isRunning) ...[
                       const SizedBox(height: 8),
-                      ...widget.serverService.serverUrlsWithLabels.map(
-                        (info) => Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      info.label,
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                    Text(
-                                      info.url,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => _copyUrl(info.url),
-                                  child: const Icon(
-                                    Icons.copy,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      ..._buildUrlSection(),
                     ],
                   ],
                 ),
