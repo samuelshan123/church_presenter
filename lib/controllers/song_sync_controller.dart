@@ -1,4 +1,5 @@
 import 'package:church_presenter/db/database_helper.dart';
+import 'package:church_presenter/db/models/sync_song_detail.dart';
 import 'package:church_presenter/db/models/sync_song_index.dart';
 import 'package:church_presenter/services/song_sync_service.dart';
 import 'package:flutter/foundation.dart';
@@ -61,6 +62,11 @@ class SyncStats {
 // Controller
 // ---------------------------------------------------------------------------
 
+// sync_meta keys describing the last completed run. Live counts are always
+// derived from the song tables, so only run-scoped figures are stored here.
+const String _kLastTotalBuckets = 'last_total_buckets';
+const String _kLastInsertedSongs = 'last_inserted_songs';
+
 /// ChangeNotifier that drives the Sync Songs UI.
 ///
 /// Inject via [ChangeNotifierProvider] when pushing [SyncSongsPage].
@@ -99,16 +105,58 @@ class SongSyncController extends ChangeNotifier {
   bool _cancelRequested = false;
   bool get cancelRequested => _cancelRequested;
 
+  /// Buckets skipped due to fetch/parse errors in the last run. Non-zero means
+  /// the sync finished but some songs are still missing — retry to pick them up.
+  int _skippedBuckets = 0;
+  int get skippedBuckets => _skippedBuckets;
+
   // ---------------------------------------------------------------------------
   // Initialisation
   // ---------------------------------------------------------------------------
 
-  /// Loads the persisted last-synced timestamp and current local song count.
+  /// Restores the last-known sync picture so returning to the page immediately
+  /// shows what is stored and what is still missing.
+  ///
+  /// Live counts (local / missing / remote total) are computed from the local
+  /// DB rather than read back from saved values, so they can never drift out
+  /// of step with what is actually stored. Only the figures that describe the
+  /// *previous run* ([SyncStats.totalBuckets], [SyncStats.insertedSongs]) come
+  /// from [sync_meta].
+  ///
   /// Call this once from [initState].
   Future<void> init() async {
+    // Never clobber a sync that is already running.
+    if (_isSyncing) return;
+
     _lastSyncedAt = await _db.getLastSyncedAt();
+
     final localCount = await _db.getSyncedSongCount();
-    _stats = _stats.copyWith(localCount: localCount);
+    final indexCount = await _db.getSongIndexCount();
+    final missingCount = await _db.getMissingSongCount();
+    final lastBuckets = await _db.getSyncMetaInt(_kLastTotalBuckets) ?? 0;
+    final lastInserted = await _db.getSyncMetaInt(_kLastInsertedSongs) ?? 0;
+
+    _stats = SyncStats(
+      totalRemote: indexCount,
+      localCount: localCount,
+      missingCount: missingCount,
+      totalBuckets: lastBuckets,
+      fetchedBuckets: lastBuckets,
+      insertedSongs: lastInserted,
+    );
+
+    // Give the idle card something useful to say instead of a generic prompt.
+    if (_status == SyncStatus.idle) {
+      if (indexCount == 0) {
+        _statusMessage = 'No songs synced yet — tap "Sync Songs" to begin.';
+      } else if (missingCount > 0) {
+        _statusMessage =
+            '$missingCount of $indexCount songs not downloaded yet.';
+      } else {
+        _statusMessage = 'All $localCount songs are up to date.';
+      }
+    }
+
     notifyListeners();
   }
 
@@ -134,8 +182,14 @@ class SongSyncController extends ChangeNotifier {
     _isSyncing = true;
     _cancelRequested = false;
     _errorMessage = null;
-    // Preserve localCount so the UI keeps showing the previous value.
-    _stats = SyncStats(localCount: _stats.localCount);
+    _skippedBuckets = 0;
+    // Preserve the restored counts so the tiles keep showing the last-known
+    // picture instead of blanking to zero until step 3 lands.
+    _stats = SyncStats(
+      localCount: _stats.localCount,
+      totalRemote: _stats.totalRemote,
+      missingCount: _stats.missingCount,
+    );
     notifyListeners();
 
     try {
@@ -203,7 +257,10 @@ class SongSyncController extends ChangeNotifier {
         // ----------------------------------------------------------------
         // Step 6: Fetch each bucket and persist
         // ----------------------------------------------------------------
+        final baseLocalCount = _stats.localCount;
+        final totalMissing = missingIds.length;
         int inserted = 0;
+        int failedBuckets = 0;
         for (int i = 0; i < buckets.length; i++) {
           if (_cancelRequested) {
             throw _SyncCancelledException();
@@ -211,23 +268,47 @@ class SongSyncController extends ChangeNotifier {
           final bucket = buckets[i];
           _update(
             SyncStatus.fetchingBucket,
-            'Fetching bucket ${i + 1} of ${buckets.length}…',
+            'Downloading bucket ${i + 1} of ${buckets.length}…',
           );
 
-          final bucketMap = await _service.fetchBucket(bucket);
+          // A single unreachable/corrupt bucket must not abort the whole run —
+          // the remaining buckets are still worth fetching, and the sync is
+          // resumable so the failed one is retried next time.
+          List<SyncSongDetail> details;
+          try {
+            final bucketMap = await _service.fetchBucket(bucket);
+            details = _service.extractDetailsFromBucket(
+              bucketMap,
+              bucketToRecords[bucket] ?? [],
+            );
+          } on _SyncCancelledException {
+            rethrow;
+          } catch (e) {
+            failedBuckets++;
+            debugPrint('[SongSync] ⚠ Bucket $bucket failed — skipping: $e');
+            _stats = _stats.copyWith(fetchedBuckets: i + 1);
+            notifyListeners();
+            continue;
+          }
           if (_cancelRequested) throw _SyncCancelledException();
-          final details = _service.extractDetailsFromBucket(
-            bucketMap,
-            bucketToRecords[bucket] ?? [],
-          );
 
-          _update(SyncStatus.writingToDb, 'Writing songs to database…');
+          // Only claim "writing" for the window we're actually writing in —
+          // otherwise the card sits on this message during the next fetch.
+          _update(
+            SyncStatus.writingToDb,
+            'Saving ${details.length} songs (bucket ${i + 1} of ${buckets.length})…',
+          );
           await _db.upsertSongDetailBatch(details);
 
           inserted += details.length;
+          // Advance localCount/missingCount live so the tiles track the DB
+          // instead of freezing on their step-2/step-3 snapshot.
           _stats = _stats.copyWith(
             fetchedBuckets: i + 1,
             insertedSongs: inserted,
+            localCount: baseLocalCount + inserted,
+            missingCount:
+                totalMissing - inserted < 0 ? 0 : totalMissing - inserted,
           );
           notifyListeners();
 
@@ -236,26 +317,66 @@ class SongSyncController extends ChangeNotifier {
             '(total inserted: $inserted)',
           );
         }
+
+        _skippedBuckets = failedBuckets;
       }
 
       // ------------------------------------------------------------------
-      // Step 7: Finalise — only update timestamp on full success
+      // Step 7: Finalise — the run reached the end without aborting.
+      // Individual buckets may have been skipped (see [_skippedBuckets]);
+      // the timestamp still records that a sync ran to completion, and the
+      // missing count below reflects whatever those skips left behind.
       // ------------------------------------------------------------------
       final now = DateTime.now();
       await _db.saveLastSyncedAt(now);
       _lastSyncedAt = now;
 
       final finalCount = await _db.getSyncedSongCount();
-      _stats = _stats.copyWith(localCount: finalCount);
+      final finalMissing = await _db.getMissingSongCount();
+      _stats = _stats.copyWith(
+        localCount: finalCount,
+        missingCount: finalMissing,
+      );
 
-      _update(SyncStatus.completed, 'Sync completed successfully!');
-      debugPrint('[SongSync] ✓ Sync finished. Total local songs: $finalCount');
+      // Persist the run-scoped figures so returning to the page can show them.
+      await _db.saveSyncMetaInt(_kLastTotalBuckets, _stats.totalBuckets);
+      await _db.saveSyncMetaInt(_kLastInsertedSongs, _stats.insertedSongs);
+
+      _update(
+        SyncStatus.completed,
+        _skippedBuckets > 0
+            ? 'Sync finished — $_skippedBuckets batch'
+                  '${_skippedBuckets == 1 ? '' : 'es'} could not be downloaded. '
+                  'Sync again to retry.'
+            : 'Sync completed successfully!',
+      );
+      debugPrint(
+        '[SongSync] ✓ Sync finished. Total local songs: $finalCount '
+        '(skipped buckets: $_skippedBuckets)',
+      );
     } on _SyncCancelledException {
-      _update(SyncStatus.idle, 'Sync cancelled.');
-      debugPrint('[SongSync] Sync was cancelled by user.');
+      // Buckets already written are kept (sync is resumable) — reconcile the
+      // tiles with what actually landed rather than leaving mid-flight values.
+      await _reconcileLocalCount();
+      final saved = _stats.insertedSongs;
+      _update(
+        SyncStatus.idle,
+        saved > 0
+            ? 'Sync cancelled — $saved songs saved. '
+                  '${_stats.missingCount} still missing.'
+            : 'Sync cancelled.',
+      );
+      debugPrint('[SongSync] Sync was cancelled by user (saved: $saved).');
     } catch (e, st) {
+      await _reconcileLocalCount();
       _errorMessage = e.toString();
-      _update(SyncStatus.failed, 'Sync failed.');
+      final saved = _stats.insertedSongs;
+      _update(
+        SyncStatus.failed,
+        saved > 0
+            ? 'Sync failed after saving $saved songs. Sync again to continue.'
+            : 'Sync failed.',
+      );
       debugPrint('[SongSync] ✗ Error: $e\n$st');
     } finally {
       _isSyncing = false;
@@ -272,6 +393,31 @@ class SongSyncController extends ChangeNotifier {
     _status = status;
     _statusMessage = message;
     notifyListeners();
+  }
+
+  /// Re-reads the true local and missing counts from the DB, replacing any
+  /// stale in-flight estimates, and records the sync timestamp when the run
+  /// actually persisted something.
+  ///
+  /// Used when a sync ends early (cancel/failure). A partial run still pulled
+  /// real songs down, so it counts as a sync for "last synced" purposes — but
+  /// a run that died before saving anything does not.
+  Future<void> _reconcileLocalCount() async {
+    try {
+      final count = await _db.getSyncedSongCount();
+      final missing = await _db.getMissingSongCount();
+      _stats = _stats.copyWith(localCount: count, missingCount: missing);
+
+      if (_stats.insertedSongs > 0) {
+        final now = DateTime.now();
+        await _db.saveLastSyncedAt(now);
+        _lastSyncedAt = now;
+        await _db.saveSyncMetaInt(_kLastTotalBuckets, _stats.totalBuckets);
+        await _db.saveSyncMetaInt(_kLastInsertedSongs, _stats.insertedSongs);
+      }
+    } catch (e) {
+      debugPrint('[SongSync] Could not reconcile counts: $e');
+    }
   }
 
   @override

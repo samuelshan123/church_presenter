@@ -418,7 +418,8 @@ class DatabaseHelper {
 
   // ==================== SYNC META ====================
 
-  /// Returns the timestamp of the last successful sync, or null if never synced.
+  /// Returns the timestamp of the last sync run that saved songs — including
+  /// cancelled or partially-failed runs — or null if nothing has ever synced.
   Future<DateTime?> getLastSyncedAt() async {
     final db = await database;
     final result = await db.query(
@@ -439,7 +440,52 @@ class DatabaseHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// Reads an arbitrary integer value from [sync_meta]. Returns null when the
+  /// key is absent or unparseable.
+  Future<int?> getSyncMetaInt(String key) async {
+    final db = await database;
+    final result = await db.query(
+      'sync_meta',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+    if (result.isEmpty) return null;
+    return int.tryParse(result.first['value'] as String);
+  }
+
+  /// Persists an integer value into [sync_meta].
+  Future<void> saveSyncMetaInt(String key, int value) async {
+    final db = await database;
+    await db.insert('sync_meta', {
+      'key': key,
+      'value': value.toString(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   // ==================== SYNC SONG INDEX ====================
+
+  /// Number of songs listed in the local master index.
+  Future<int> getSongIndexCount() async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM sync_song_index',
+    );
+    return (result.first['cnt'] as int?) ?? 0;
+  }
+
+  /// Number of indexed songs that have no full detail row yet — i.e. what is
+  /// still missing locally. Resolved entirely in SQL so it stays accurate
+  /// without a network call.
+  Future<int> getMissingSongCount() async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT COUNT(*) AS cnt FROM sync_song_index i
+      WHERE NOT EXISTS (
+        SELECT 1 FROM sync_song_detail d WHERE d.remote_id = i.remote_id
+      )
+    ''');
+    return (result.first['cnt'] as int?) ?? 0;
+  }
 
   /// Returns the set of remote IDs stored in the local song index table.
   Future<Set<String>> getAllLocalSongIndexIds() async {
@@ -449,17 +495,23 @@ class DatabaseHelper {
   }
 
   /// Upserts a batch of song index records (insert or replace).
+  ///
+  /// Wrapped in a transaction — the index is several thousand rows and an
+  /// untransacted batch commits per-row, blocking long enough to drop frames.
   Future<void> upsertSongIndexBatch(List<SyncSongIndex> records) async {
+    if (records.isEmpty) return;
     final db = await database;
-    final batch = db.batch();
-    for (final r in records) {
-      batch.insert(
-        'sync_song_index',
-        r.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    await batch.commit(noResult: true);
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final r in records) {
+        batch.insert(
+          'sync_song_index',
+          r.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+    });
   }
 
   // ==================== SYNC SONG DETAIL ====================
@@ -481,23 +533,45 @@ class DatabaseHelper {
   }
 
   /// Returns the subset of [remoteIds] that are NOT yet in the local detail table.
+  ///
+  /// Resolves the difference in SQL, chunked to stay under SQLite's 999
+  /// bound-variable limit, instead of pulling every local id into a Dart Set.
   Future<List<String>> getMissingSongIds(List<String> remoteIds) async {
-    final localIds = await getLocalSongDetailIds();
-    return remoteIds.where((id) => !localIds.contains(id)).toList();
+    if (remoteIds.isEmpty) return const [];
+    final db = await database;
+    const chunkSize = 900;
+    final missing = <String>[];
+
+    for (var start = 0; start < remoteIds.length; start += chunkSize) {
+      final end = (start + chunkSize).clamp(0, remoteIds.length);
+      final chunk = remoteIds.sublist(start, end);
+      final placeholders = List.filled(chunk.length, '?').join(',');
+      final rows = await db.rawQuery(
+        'SELECT remote_id FROM sync_song_detail '
+        'WHERE remote_id IN ($placeholders)',
+        chunk,
+      );
+      final present = rows.map((r) => r['remote_id'] as String).toSet();
+      missing.addAll(chunk.where((id) => !present.contains(id)));
+    }
+    return missing;
   }
 
   /// Upserts a batch of song detail records (insert or replace).
   Future<void> upsertSongDetailBatch(List<SyncSongDetail> records) async {
+    if (records.isEmpty) return;
     final db = await database;
-    final batch = db.batch();
-    for (final r in records) {
-      batch.insert(
-        'sync_song_detail',
-        r.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    await batch.commit(noResult: true);
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final r in records) {
+        batch.insert(
+          'sync_song_detail',
+          r.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+    });
   }
 
   /// Returns only remote_id + title for songs starting with [letter].
