@@ -114,12 +114,9 @@ class _PresenterScreenState extends State<PresenterScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: isPrimary ? 10 : 6,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: isPrimary ? 0.25 : 0.12),
+          color: Colors.white.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -132,20 +129,15 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     isPrimary && info.isRecommended
                         ? '${info.label} · Recommended'
                         : info.label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isPrimary ? Colors.white : Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
                   ),
                   Text(
                     info.url,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: isPrimary ? 18 : 13,
-                      color: isPrimary ? Colors.white : Colors.white70,
-                      fontWeight: isPrimary
-                          ? FontWeight.bold
-                          : FontWeight.w500,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -154,11 +146,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () => _copyUrl(info.url),
-              child: Icon(
-                Icons.copy,
-                size: isPrimary ? 20 : 16,
-                color: isPrimary ? Colors.white : Colors.white70,
-              ),
+              child: const Icon(Icons.copy, size: 20, color: Colors.white),
             ),
           ],
         ),
@@ -202,7 +190,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
