@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../services/server_service.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class TestPage extends StatefulWidget {
   final ServerService serverService;
@@ -71,10 +73,10 @@ class _TestPageState extends State<TestPage> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    Icon(
+                    AppIcon(
                       widget.serverService.isRunning
-                          ? Icons.check_circle
-                          : Icons.cancel,
+                          ? HugeIcons.strokeRoundedCheckmarkCircle02
+                          : HugeIcons.strokeRoundedCancelCircle,
                       size: 48,
                       color: widget.serverService.isRunning
                           ? Colors.green
@@ -119,7 +121,6 @@ class _TestPageState extends State<TestPage> {
               decoration: const InputDecoration(
                 labelText: 'Message',
                 hintText: 'Type your message here...',
-                prefixIcon: Icon(Icons.message),
               ),
               enabled: widget.serverService.isRunning,
               minLines: 3,
@@ -135,7 +136,7 @@ class _TestPageState extends State<TestPage> {
                     onPressed: widget.serverService.isRunning
                         ? _pasteFromClipboard
                         : null,
-                    icon: const Icon(Icons.content_paste),
+                    icon: AppIcon(HugeIcons.strokeRoundedClipboardPaste),
                     label: const Text('Paste'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -152,7 +153,7 @@ class _TestPageState extends State<TestPage> {
                     onPressed: widget.serverService.isRunning
                         ? _sendMessage
                         : null,
-                    icon: const Icon(Icons.send),
+                    icon: AppIcon(HugeIcons.strokeRoundedSent),
                     label: const Text('Send Message'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -183,8 +184,8 @@ class _TestPageState extends State<TestPage> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.check_circle,
+                      AppIcon(
+                        HugeIcons.strokeRoundedCheckmarkCircle02,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 12),

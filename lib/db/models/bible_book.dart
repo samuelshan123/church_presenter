@@ -2,10 +2,7 @@ class BibleBook {
   final String english;
   final String tamil;
 
-  BibleBook({
-    required this.english,
-    required this.tamil,
-  });
+  BibleBook({required this.english, required this.tamil});
 
   factory BibleBook.fromJson(Map<String, dynamic> json) {
     final bookData = json['book'] as Map<String, dynamic>;
@@ -17,10 +14,7 @@ class BibleBook {
 
   Map<String, dynamic> toJson() {
     return {
-      'book': {
-        'english': english,
-        'tamil': tamil,
-      }
+      'book': {'english': english, 'tamil': tamil},
     };
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'app_icon.dart';
 
 /// A badge that displays "Live" status when the server is active
 class LiveStatusBadge extends StatelessWidget {
@@ -16,7 +18,11 @@ class LiveStatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.wifi_tethering, size: 16, color: Colors.green),
+          AppIcon(
+            HugeIcons.strokeRoundedWifiConnected01,
+            size: 16,
+            color: Colors.green,
+          ),
           const SizedBox(width: 4),
           Text(
             'Live',

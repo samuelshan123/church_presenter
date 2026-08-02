@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../services/image_compression_service.dart';
 import '../utils/selection_decoration.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class BibleVerseImageEditorScreen extends StatefulWidget {
   final String bookName;
@@ -352,8 +354,12 @@ class _BibleVerseImageEditorScreenState
                                 style: TextStyle(
                                   color: _referenceTextColor,
                                   fontSize: _referenceFontSize,
-                                  fontWeight: _referenceBold ? FontWeight.w700 : FontWeight.w400,
-                                  fontStyle: _referenceItalic ? FontStyle.italic : FontStyle.normal,
+                                  fontWeight: _referenceBold
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                  fontStyle: _referenceItalic
+                                      ? FontStyle.italic
+                                      : FontStyle.normal,
                                   wordSpacing: _referenceWordSpacing,
                                 ),
                               ),
@@ -481,8 +487,8 @@ class _BibleVerseImageEditorScreenState
               ),
             ),
             child: color.computeLuminance() > 0.75
-                ? Icon(
-                    Icons.check,
+                ? AppIcon(
+                    HugeIcons.strokeRoundedTick02,
                     size: 18,
                     color: isSelected ? Colors.black : Colors.transparent,
                   )
@@ -496,7 +502,7 @@ class _BibleVerseImageEditorScreenState
           title: _isEditingVerse ? 'Pick Verse Color' : 'Pick Reference Color',
           onSelected: _updateActiveTextColor,
         ),
-        icon: const Icon(Icons.palette_outlined),
+        icon: AppIcon(HugeIcons.strokeRoundedColors),
         label: const Text('Custom'),
       ),
     ]);
@@ -520,7 +526,7 @@ class _BibleVerseImageEditorScreenState
     return _buildHorizontalOptions([
       ChoiceChip(
         label: const Text('Verse'),
-        avatar: const Icon(Icons.text_fields, size: 18),
+        avatar: AppIcon(HugeIcons.strokeRoundedText, size: 18),
         selected: _selectedLayer == _EditableLayer.verse,
         onSelected: (_) {
           setState(() {
@@ -530,7 +536,7 @@ class _BibleVerseImageEditorScreenState
       ),
       ChoiceChip(
         label: const Text('Reference'),
-        avatar: const Icon(Icons.book_outlined, size: 18),
+        avatar: AppIcon(HugeIcons.strokeRoundedBook02, size: 18),
         selected: _selectedLayer == _EditableLayer.reference,
         onSelected: (_) {
           setState(() {
@@ -544,32 +550,36 @@ class _BibleVerseImageEditorScreenState
   Widget _buildAlignmentSelector() {
     Widget chip({
       required TextAlign value,
-      required IconData icon,
+      required HugeIconData icon,
       required String label,
     }) {
       return ChoiceChip(
         label: Text(label),
-        avatar: Icon(icon, size: 18),
+        avatar: AppIcon(icon, size: 18),
         selected: _activeTextAlign == value,
         onSelected: (_) => _updateActiveTextAlign(value),
       );
     }
 
     return _buildHorizontalOptions([
-      chip(value: TextAlign.left, icon: Icons.format_align_left, label: 'Left'),
+      chip(
+        value: TextAlign.left,
+        icon: HugeIcons.strokeRoundedTextAlignLeft,
+        label: 'Left',
+      ),
       chip(
         value: TextAlign.center,
-        icon: Icons.format_align_center,
+        icon: HugeIcons.strokeRoundedTextAlignCenter,
         label: 'Center',
       ),
       chip(
         value: TextAlign.right,
-        icon: Icons.format_align_right,
+        icon: HugeIcons.strokeRoundedTextAlignRight,
         label: 'Right',
       ),
       chip(
         value: TextAlign.justify,
-        icon: Icons.format_align_justify,
+        icon: HugeIcons.strokeRoundedTextAlignJustifyCenter,
         label: 'Justify',
       ),
     ]);
@@ -590,9 +600,18 @@ class _BibleVerseImageEditorScreenState
               child: const TabBar(
                 isScrollable: true,
                 tabs: [
-                  Tab(text: 'Background', icon: Icon(Icons.wallpaper_outlined)),
-                  Tab(text: 'Text', icon: Icon(Icons.format_size)),
-                  Tab(text: 'Content', icon: Icon(Icons.edit_note)),
+                  Tab(
+                    text: 'Background',
+                    icon: AppIcon(HugeIcons.strokeRoundedImage02),
+                  ),
+                  Tab(
+                    text: 'Text',
+                    icon: AppIcon(HugeIcons.strokeRoundedTextFont),
+                  ),
+                  Tab(
+                    text: 'Content',
+                    icon: AppIcon(HugeIcons.strokeRoundedNote02),
+                  ),
                 ],
               ),
             ),
@@ -618,12 +637,12 @@ class _BibleVerseImageEditorScreenState
                               });
                             },
                           ),
-                          icon: const Icon(Icons.format_color_fill),
+                          icon: AppIcon(HugeIcons.strokeRoundedPaintBucket),
                           label: const Text('Color'),
                         ),
                         FilledButton.tonalIcon(
                           onPressed: _pickBackgroundImage,
-                          icon: const Icon(Icons.image_outlined),
+                          icon: AppIcon(HugeIcons.strokeRoundedImage02),
                           label: const Text('Image'),
                         ),
                         if (_backgroundImageFile != null)
@@ -636,7 +655,7 @@ class _BibleVerseImageEditorScreenState
                                 }
                               });
                             },
-                            icon: const Icon(Icons.clear),
+                            icon: AppIcon(HugeIcons.strokeRoundedCancel01),
                             label: const Text('Remove'),
                           ),
                       ]),
@@ -759,7 +778,7 @@ class _BibleVerseImageEditorScreenState
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
                             onPressed: _resetVersePosition,
-                            icon: const Icon(Icons.center_focus_strong),
+                            icon: AppIcon(HugeIcons.strokeRoundedCenterFocus),
                             label: const Text('Reset Position'),
                           ),
                         ),
@@ -836,7 +855,7 @@ class _BibleVerseImageEditorScreenState
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.ios_share),
+                : AppIcon(HugeIcons.strokeRoundedShare08),
             tooltip: 'Share as Image',
           ),
         ],
@@ -859,10 +878,7 @@ class _SelectionFrame extends StatelessWidget {
   final Widget child;
   final bool expandToMaxWidth;
 
-  const _SelectionFrame({
-    required this.child,
-    this.expandToMaxWidth = false,
-  });
+  const _SelectionFrame({required this.child, this.expandToMaxWidth = false});
 
   @override
   Widget build(BuildContext context) {

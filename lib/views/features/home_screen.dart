@@ -12,6 +12,8 @@ import 'present-image/screens/present_image_screen.dart';
 import 'presenter/screens/presenter_screen.dart';
 import 'settings_screen.dart';
 import 'songs/screens/songs_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../widgets/app_icon.dart';
 
 class HomeScreen extends StatefulWidget {
   final ThemeService themeService;
@@ -55,37 +57,40 @@ class _HomeScreenState extends State<HomeScreen> {
     final colorScheme = theme.colorScheme;
     final actions = [
       _HomeAction(
-        icon: Icons.music_note_rounded,
+        icon: HugeIcons.strokeRoundedMusicNote01,
         title: 'Songs',
         color: Colors.purple,
         destinationBuilder: (_) => const SongsScreen(),
       ),
       _HomeAction(
-        icon: Icons.menu_book_rounded,
+        icon: HugeIcons.strokeRoundedBookOpenText,
         title: 'Bible',
         color: Colors.blue,
-        destinationBuilder: (_) => BibleIndexScreen(serverService: serverService),
+        destinationBuilder: (_) =>
+            BibleIndexScreen(serverService: serverService),
       ),
       _HomeAction(
-        icon: Icons.photo_library_rounded,
+        icon: HugeIcons.strokeRoundedAlbum02,
         title: 'Present Images',
         color: Colors.green,
-        destinationBuilder: (_) => PresentImageScreen(serverService: serverService),
+        destinationBuilder: (_) =>
+            PresentImageScreen(serverService: serverService),
       ),
       _HomeAction(
-        icon: Icons.draw_rounded,
+        icon: HugeIcons.strokeRoundedCanvas,
         title: 'Canvas',
         color: Colors.pink,
         destinationBuilder: (_) => CanvasScreen(serverService: serverService),
       ),
       _HomeAction(
-        icon: Icons.wallpaper_rounded,
+        icon: HugeIcons.strokeRoundedImage02,
         title: 'Set Background',
         color: Colors.teal,
-        destinationBuilder: (_) => BackgroundScreen(serverService: serverService),
+        destinationBuilder: (_) =>
+            BackgroundScreen(serverService: serverService),
       ),
       _HomeAction(
-        icon: Icons.present_to_all_rounded,
+        icon: HugeIcons.strokeRoundedPresentation01,
         title: 'Presenter',
         color: Colors.orange,
         destinationBuilder: (_) =>
@@ -128,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: AppIcon(HugeIcons.strokeRoundedSettings02),
             tooltip: 'Settings',
             onPressed: () {
               Navigator.push(
@@ -253,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _HomeAction {
-  final IconData icon;
+  final HugeIconData icon;
   final String title;
   final Color color;
   final WidgetBuilder destinationBuilder;

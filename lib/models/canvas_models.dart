@@ -115,8 +115,12 @@ class CanvasImage {
         h: h ?? this.h,
       );
 
-  Rect toRect(Size size) =>
-      Rect.fromLTWH(x * size.width, y * size.height, w * size.width, h * size.height);
+  Rect toRect(Size size) => Rect.fromLTWH(
+    x * size.width,
+    y * size.height,
+    w * size.width,
+    h * size.height,
+  );
 
   bool contains(Offset normalised) =>
       normalised.dx >= x &&
@@ -138,7 +142,14 @@ class CanvasImage {
 /// timeline, so "pop the last stroke" is not enough — each command carries the
 /// state needed to invert it. Drags are coalesced into a single [transformImage]
 /// on pointer-up rather than one command per move event.
-enum CanvasCommandType { addStroke, addImage, transformImage, deleteImage, eraseStrokes, clear }
+enum CanvasCommandType {
+  addStroke,
+  addImage,
+  transformImage,
+  deleteImage,
+  eraseStrokes,
+  clear,
+}
 
 class CanvasCommand {
   final CanvasCommandType type;

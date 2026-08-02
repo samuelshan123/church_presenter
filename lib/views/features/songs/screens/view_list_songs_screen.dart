@@ -7,6 +7,8 @@ import '../utils/confirm_delete_dialog.dart';
 import '../widgets/compact_action_button.dart';
 import 'add_edit_song_screen.dart';
 import 'view_song_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class ViewListSongsScreen extends StatefulWidget {
   final SongList songList;
@@ -63,7 +65,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: AppIcon(HugeIcons.strokeRoundedAdd01),
             tooltip: 'Create New Song',
             onPressed: () async {
               await Navigator.push(
@@ -85,8 +87,8 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.playlist_add,
+                  AppIcon(
+                    HugeIcons.strokeRoundedPlayListAdd,
                     size: 80,
                     color: Theme.of(
                       context,
@@ -144,7 +146,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CompactActionButton(
-                            icon: Icons.edit,
+                            icon: HugeIcons.strokeRoundedPencilEdit02,
                             color: Colors.blue,
                             tooltip: 'Edit song',
                             onPressed: () async {
@@ -159,7 +161,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                             },
                           ),
                           CompactActionButton(
-                            icon: Icons.delete,
+                            icon: HugeIcons.strokeRoundedDelete02,
                             color: Colors.red,
                             tooltip: 'Delete song',
                             onPressed: () => _deleteSong(song),

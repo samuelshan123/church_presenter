@@ -47,15 +47,14 @@ class SyncStats {
     int? totalBuckets,
     int? fetchedBuckets,
     int? insertedSongs,
-  }) =>
-      SyncStats(
-        totalRemote: totalRemote ?? this.totalRemote,
-        localCount: localCount ?? this.localCount,
-        missingCount: missingCount ?? this.missingCount,
-        totalBuckets: totalBuckets ?? this.totalBuckets,
-        fetchedBuckets: fetchedBuckets ?? this.fetchedBuckets,
-        insertedSongs: insertedSongs ?? this.insertedSongs,
-      );
+  }) => SyncStats(
+    totalRemote: totalRemote ?? this.totalRemote,
+    localCount: localCount ?? this.localCount,
+    missingCount: missingCount ?? this.missingCount,
+    totalBuckets: totalBuckets ?? this.totalBuckets,
+    fetchedBuckets: fetchedBuckets ?? this.fetchedBuckets,
+    insertedSongs: insertedSongs ?? this.insertedSongs,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -71,11 +70,9 @@ const String _kLastInsertedSongs = 'last_inserted_songs';
 ///
 /// Inject via [ChangeNotifierProvider] when pushing [SyncSongsPage].
 class SongSyncController extends ChangeNotifier {
-  SongSyncController({
-    SongSyncService? service,
-    DatabaseHelper? db,
-  })  : _service = service ?? SongSyncService(),
-        _db = db ?? DatabaseHelper.instance;
+  SongSyncController({SongSyncService? service, DatabaseHelper? db})
+    : _service = service ?? SongSyncService(),
+      _db = db ?? DatabaseHelper.instance;
 
   final SongSyncService _service;
   final DatabaseHelper _db;
@@ -200,7 +197,9 @@ class SongSyncController extends ChangeNotifier {
       final rawIndex = await _service.fetchMasterIndex();
       final indexRecords = _service.parseMasterIndex(rawIndex);
 
-      debugPrint('[SongSync] Remote master index: ${indexRecords.length} songs');
+      debugPrint(
+        '[SongSync] Remote master index: ${indexRecords.length} songs',
+      );
       _stats = _stats.copyWith(totalRemote: indexRecords.length);
       notifyListeners();
 
@@ -307,8 +306,9 @@ class SongSyncController extends ChangeNotifier {
             fetchedBuckets: i + 1,
             insertedSongs: inserted,
             localCount: baseLocalCount + inserted,
-            missingCount:
-                totalMissing - inserted < 0 ? 0 : totalMissing - inserted,
+            missingCount: totalMissing - inserted < 0
+                ? 0
+                : totalMissing - inserted,
           );
           notifyListeners();
 

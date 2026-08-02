@@ -17,6 +17,8 @@ import '../../../widgets/search_input_decoration.dart';
 import '../utils/bible_book_utils.dart';
 import '../utils/selection_decoration.dart';
 import '../widgets/grid_selector_dialog.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class BibleViewBookScreen extends StatefulWidget {
   final BibleBook book;
@@ -268,7 +270,10 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(Icons.copy_rounded, color: colorScheme.primary),
+                leading: AppIcon(
+                  HugeIcons.strokeRoundedCopy01,
+                  color: colorScheme.primary,
+                ),
                 title: const Text('Copy'),
                 onTap: () async {
                   Navigator.pop(sheetContext);
@@ -276,7 +281,10 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.share_rounded, color: colorScheme.primary),
+                leading: AppIcon(
+                  HugeIcons.strokeRoundedShare08,
+                  color: colorScheme.primary,
+                ),
                 title: const Text('Share as Text'),
                 onTap: () async {
                   Navigator.pop(sheetContext);
@@ -284,7 +292,10 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.image_rounded, color: colorScheme.primary),
+                leading: AppIcon(
+                  HugeIcons.strokeRoundedImage02,
+                  color: colorScheme.primary,
+                ),
                 title: const Text('Share as Image'),
                 onTap: () async {
                   Navigator.pop(sheetContext);
@@ -361,10 +372,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
               (index - nearestBuiltIndex) * _estimatedVerseExtent
         : index * _estimatedVerseExtent;
 
-    return estimated.clamp(
-      position.minScrollExtent,
-      position.maxScrollExtent,
-    );
+    return estimated.clamp(position.minScrollExtent, position.maxScrollExtent);
   }
 
   void _showVerseSelector() {
@@ -467,7 +475,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.arrow_drop_down),
+              AppIcon(HugeIcons.strokeRoundedArrowDown01),
             ],
           ),
         ),
@@ -498,7 +506,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.arrow_drop_down, size: 24),
+                    AppIcon(HugeIcons.strokeRoundedArrowDown01, size: 24),
                   ],
                 ),
               ),
@@ -509,7 +517,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
         actions: [
           BibleVerseHistoryButton(onEntrySelected: _navigateToHistoryEntry),
           IconButton(
-            icon: const Icon(Icons.tune),
+            icon: AppIcon(HugeIcons.strokeRoundedSlidersHorizontal),
             tooltip: 'Presenter Settings',
             onPressed: () =>
                 showPresenterSettingsDialog(context, globalPresenterConfig),
@@ -523,8 +531,8 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
+                  AppIcon(
+                    HugeIcons.strokeRoundedAlertCircle,
                     size: 64,
                     color: Theme.of(context).colorScheme.error,
                   ),
@@ -721,8 +729,10 @@ class _BookSelectorSheetState extends State<_BookSelectorSheet> {
                             book.english == widget.currentBook?.english;
                         return ListTile(
                           selected: isSelected,
-                          leading: Icon(
-                            isSelected ? Icons.check_circle : Icons.book,
+                          leading: AppIcon(
+                            isSelected
+                                ? HugeIcons.strokeRoundedCheckmarkCircle02
+                                : HugeIcons.strokeRoundedBook02,
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primary
                                 : null,

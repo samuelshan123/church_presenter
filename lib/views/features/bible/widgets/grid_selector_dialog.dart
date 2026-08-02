@@ -59,7 +59,9 @@ Future<void> showGridSelectorDialog(
                   child: Text(
                     label,
                     style: TextStyle(
-                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: selected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: selected
                           ? Theme.of(context).colorScheme.onPrimaryContainer
                           : null,

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../controllers/song_sync_controller.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 /// Push via [SongSyncScreen.route()]. The controller is provided globally from
 /// main.dart so it survives back-navigation and ongoing syncs don't crash.
@@ -71,8 +73,7 @@ class _SongSyncViewState extends State<_SongSyncView> {
                     // Bucket/inserted figures only mean something during a run,
                     // and just after one while the success banner is up.
                     showSyncDetails:
-                        ctrl.isSyncing ||
-                        ctrl.status == SyncStatus.completed,
+                        ctrl.isSyncing || ctrl.status == SyncStatus.completed,
                   ),
                   SizedBox(height: vSpc),
                 ],
@@ -123,7 +124,7 @@ class _SongSyncViewState extends State<_SongSyncView> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.cancel_outlined),
+                        : AppIcon(HugeIcons.strokeRoundedCancelCircle),
                     label: Text(
                       ctrl.cancelRequested ? 'Cancelling…' : 'Cancel Sync',
                     ),
@@ -147,7 +148,7 @@ class _SongSyncViewState extends State<_SongSyncView> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.sync),
+                      : AppIcon(HugeIcons.strokeRoundedRefresh04),
                   label: Text(ctrl.isSyncing ? 'Syncing…' : 'Sync Songs'),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -174,16 +175,16 @@ class _StatusCard extends StatelessWidget {
   const _StatusCard({required this.ctrl});
   final SongSyncController ctrl;
 
-  IconData _iconFor(SyncStatus s) {
+  HugeIconData _iconFor(SyncStatus s) {
     switch (s) {
       case SyncStatus.idle:
-        return Icons.cloud_sync_outlined;
+        return HugeIcons.strokeRoundedCloudDownload;
       case SyncStatus.completed:
-        return Icons.check_circle_outline;
+        return HugeIcons.strokeRoundedCheckmarkCircle01;
       case SyncStatus.failed:
-        return Icons.error_outline;
+        return HugeIcons.strokeRoundedAlertCircle;
       default:
-        return Icons.sync;
+        return HugeIcons.strokeRoundedRefresh04;
     }
   }
 
@@ -226,7 +227,11 @@ class _StatusCard extends StatelessWidget {
                           color: cs.primary,
                         ),
                       )
-                    : Icon(_iconFor(ctrl.status), size: iconSz, color: color),
+                    : AppIcon(
+                        _iconFor(ctrl.status),
+                        size: iconSz,
+                        color: color,
+                      ),
                 SizedBox(width: w < 360 ? 10 : 16),
                 Expanded(
                   child: Text(
@@ -261,21 +266,41 @@ class _StatsGrid extends StatelessWidget {
     final cs = theme.colorScheme;
 
     final items = [
-      _StatItem('Saved Songs', stats.localCount, Icons.storage_outlined),
-      _StatItem('Remote Songs', stats.totalRemote, Icons.cloud_outlined),
+      _StatItem(
+        'Saved Songs',
+        stats.localCount,
+        HugeIcons.strokeRoundedDatabase02,
+      ),
+      _StatItem(
+        'Remote Songs',
+        stats.totalRemote,
+        HugeIcons.strokeRoundedCloud,
+      ),
 
       // Highlighted when songs are still outstanding — this is the number the
       // user comes back to the page to check.
       _StatItem(
         'Missing',
         stats.missingCount,
-        Icons.download_outlined,
+        HugeIcons.strokeRoundedDownload04,
         color: stats.missingCount > 0 ? cs.error : null,
       ),
       if (showSyncDetails) ...[
-        _StatItem('Total Buckets', stats.totalBuckets, Icons.folder_outlined),
-        _StatItem('Fetched Buckets', stats.fetchedBuckets, Icons.folder_open),
-        _StatItem('Inserted', stats.insertedSongs, Icons.playlist_add),
+        _StatItem(
+          'Total Buckets',
+          stats.totalBuckets,
+          HugeIcons.strokeRoundedFolder01,
+        ),
+        _StatItem(
+          'Fetched Buckets',
+          stats.fetchedBuckets,
+          HugeIcons.strokeRoundedFolder02,
+        ),
+        _StatItem(
+          'Inserted',
+          stats.insertedSongs,
+          HugeIcons.strokeRoundedPlayListAdd,
+        ),
       ],
     ];
 
@@ -307,7 +332,7 @@ class _StatsGrid extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        AppIcon(
                           item.icon,
                           size: iconSz,
                           color: item.color ?? cs.primary,
@@ -348,7 +373,7 @@ class _StatItem {
   const _StatItem(this.label, this.value, this.icon, {this.color});
   final String label;
   final int value;
-  final IconData icon;
+  final HugeIconData icon;
 
   /// Overrides the icon/value tint. Null falls back to the theme primary.
   final Color? color;
@@ -419,7 +444,7 @@ class _ErrorBox extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.warning_amber_rounded, color: cs.onErrorContainer),
+          AppIcon(HugeIcons.strokeRoundedAlert02, color: cs.onErrorContainer),
           const SizedBox(width: 10),
           Expanded(
             child: Text(message, style: TextStyle(color: cs.onErrorContainer)),
@@ -469,16 +494,15 @@ class _SuccessBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            partial ? Icons.info_outline : Icons.check_circle,
+          AppIcon(
+            partial
+                ? HugeIcons.strokeRoundedInformationCircle
+                : HugeIcons.strokeRoundedCheckmarkCircle02,
             color: accent,
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: accent.shade800),
-            ),
+            child: Text(message, style: TextStyle(color: accent.shade800)),
           ),
         ],
       ),
@@ -517,8 +541,18 @@ class _LastSyncedRowState extends State<_LastSyncedRow> {
   DateTime? get lastSyncedAt => widget.lastSyncedAt;
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   /// 12-hour clock time, e.g. `3:47 PM`.
@@ -568,7 +602,7 @@ class _LastSyncedRowState extends State<_LastSyncedRow> {
         final double iconSz = w < 360 ? 15 : 18;
         return Row(
           children: [
-            Icon(Icons.history, size: iconSz),
+            AppIcon(HugeIcons.strokeRoundedClock01, size: iconSz),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

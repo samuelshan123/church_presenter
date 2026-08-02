@@ -10,6 +10,8 @@ import '../../../../widgets/broadcast_control_bar.dart';
 import '../../../../widgets/presenter_settings_panel.dart';
 import '../../utils/section_broadcast_controller.dart';
 import '../../utils/song_section_parser.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../../widgets/app_icon.dart';
 
 class WebSongDetailScreen extends StatefulWidget {
   final String title;
@@ -180,12 +182,10 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.tune),
+            icon: AppIcon(HugeIcons.strokeRoundedSlidersHorizontal),
             tooltip: 'Presenter Settings',
-            onPressed: () => showPresenterSettingsDialog(
-              context,
-              globalPresenterConfig,
-            ),
+            onPressed: () =>
+                showPresenterSettingsDialog(context, globalPresenterConfig),
           ),
         ],
       ),
@@ -193,7 +193,8 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
         children: [
           if (serverActive)
             const BroadcastInfoBanner(
-              message: 'Tap any section below to broadcast to connected devices',
+              message:
+                  'Tap any section below to broadcast to connected devices',
             ),
           if (serverActive)
             BroadcastControlBar(
@@ -218,9 +219,7 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                         children: [
                           Text(
                             'Song Title',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 12),
@@ -228,7 +227,9 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                             controller: _titleController,
                             decoration: const InputDecoration(
                               hintText: 'Song title',
-                              prefixIcon: Icon(Icons.title),
+                              prefixIcon: AppIcon(
+                                HugeIcons.strokeRoundedTextSmallcaps,
+                              ),
                             ),
                             textCapitalization: TextCapitalization.words,
                           ),
@@ -246,9 +247,7 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                         children: [
                           Text(
                             'Lyrics',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 12),
@@ -267,12 +266,14 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                             )
                           else if (_lyricsError != null)
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 24),
+                              padding: const EdgeInsets.symmetric(vertical: 24),
                               child: Column(
                                 children: [
-                                  const Icon(Icons.warning_amber_rounded,
-                                      size: 40, color: Colors.orange),
+                                  AppIcon(
+                                    HugeIcons.strokeRoundedAlert02,
+                                    size: 40,
+                                    color: Colors.orange,
+                                  ),
                                   const SizedBox(height: 8),
                                   Text(
                                     _lyricsError!,
@@ -290,7 +291,9 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                                   const SizedBox(height: 12),
                                   OutlinedButton.icon(
                                     onPressed: _fetchLyrics,
-                                    icon: const Icon(Icons.refresh),
+                                    icon: AppIcon(
+                                      HugeIcons.strokeRoundedRefresh,
+                                    ),
                                     label: const Text('Retry'),
                                   ),
                                 ],
@@ -305,8 +308,7 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                               ),
                               maxLines: null,
                               minLines: 10,
-                              textCapitalization:
-                                  TextCapitalization.sentences,
+                              textCapitalization: TextCapitalization.sentences,
                             ),
                         ],
                       ),
@@ -317,18 +319,15 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                   if (_displaySections.isNotEmpty) ...[
                     Row(
                       children: [
-                        const Icon(Icons.view_list, size: 18),
+                        AppIcon(HugeIcons.strokeRoundedListView, size: 18),
                         const SizedBox(width: 8),
                         Text(
                           'Preview  •  tap to broadcast',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium
+                          style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.55),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.55),
                               ),
                         ),
                       ],
@@ -351,29 +350,26 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                               border: Border.all(
                                 color: isSelected
                                     ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .outline
-                                        .withOpacity(0.2),
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.outline.withOpacity(0.2),
                                 width: isSelected ? 3 : 1,
                               ),
                             ),
                             child: Text(
                               _displaySections[index],
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
+                              style: Theme.of(context).textTheme.bodyLarge
                                   ?.copyWith(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     height: 1.6,
                                     color: isSelected
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onPrimaryContainer
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                   ),
                             ),
                           ),
@@ -399,23 +395,24 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
       return SafeArea(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: Theme.of(context)
-              .colorScheme
-              .secondaryContainer
-              .withOpacity(0.4),
+          color: Theme.of(
+            context,
+          ).colorScheme.secondaryContainer.withOpacity(0.4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.check_circle,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.secondary),
+              AppIcon(
+                HugeIcons.strokeRoundedCheckmarkCircle02,
+                size: 18,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Already saved in your library',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -435,9 +432,11 @@ class _WebSongDetailScreenState extends State<WebSongDetailScreen>
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                : const Icon(Icons.save_alt),
+                : AppIcon(HugeIcons.strokeRoundedSave),
             label: const Text('Save to Library'),
           ),
         ),
@@ -475,15 +474,14 @@ class _SaveBottomSheet extends StatelessWidget {
           ),
           Text(
             'Save to…',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           // All Songs option
           _DestinationTile(
-            icon: Icons.music_note,
+            icon: HugeIcons.strokeRoundedMusicNote01,
             color: Colors.purple,
             title: 'All Songs',
             subtitle: 'Save to your main song library',
@@ -496,16 +494,15 @@ class _SaveBottomSheet extends StatelessWidget {
             Text(
               'My Lists',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.55),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.55),
+              ),
             ),
             const SizedBox(height: 8),
             ...lists.map(
               (list) => _DestinationTile(
-                icon: Icons.playlist_add,
+                icon: HugeIcons.strokeRoundedPlayListAdd,
                 color: Colors.blue,
                 title: list.name,
                 subtitle: 'Save to this list',
@@ -520,7 +517,7 @@ class _SaveBottomSheet extends StatelessWidget {
 }
 
 class _DestinationTile extends StatelessWidget {
-  final IconData icon;
+  final HugeIconData icon;
   final Color color;
   final String title;
   final String subtitle;
@@ -545,12 +542,11 @@ class _DestinationTile extends StatelessWidget {
           color: color.withOpacity(0.15),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: color, size: 20),
+        child: AppIcon(icon, color: color, size: 20),
       ),
-      title: Text(title,
-          style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: AppIcon(HugeIcons.strokeRoundedArrowRight01),
     );
   }
 }

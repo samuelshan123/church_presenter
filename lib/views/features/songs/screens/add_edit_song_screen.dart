@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../db/database_helper.dart';
 import '../../../../db/models/song.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class AddEditSongScreen extends StatefulWidget {
   final Song? song;
@@ -47,10 +49,7 @@ class _AddEditSongScreenState extends State<AddEditSongScreen> {
           title: _titleController.text.trim(),
           content: _contentController.text.trim(),
         );
-        await _db.createSongAndOptionallyAddToList(
-          newSong,
-          widget.addToListId,
-        );
+        await _db.createSongAndOptionallyAddToList(newSong, widget.addToListId);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +120,9 @@ class _AddEditSongScreenState extends State<AddEditSongScreen> {
                               decoration: const InputDecoration(
                                 labelText: 'Title',
                                 hintText: 'Enter song title',
-                                prefixIcon: Icon(Icons.title),
+                                prefixIcon: AppIcon(
+                                  HugeIcons.strokeRoundedTextSmallcaps,
+                                ),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {

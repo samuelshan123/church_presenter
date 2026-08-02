@@ -11,9 +11,18 @@ import '../../../../services/image_compression_service.dart';
 import '../../../../services/server_service.dart';
 import '../widgets/canvas_painters.dart';
 import '../widgets/canvas_toolbar.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 /// Which part of a selected image the current drag is manipulating.
-enum _DragMode { none, move, resizeTopLeft, resizeTopRight, resizeBottomLeft, resizeBottomRight }
+enum _DragMode {
+  none,
+  move,
+  resizeTopLeft,
+  resizeTopRight,
+  resizeBottomLeft,
+  resizeBottomRight,
+}
 
 /// The drawable canvas: place images, draw over them, erase, undo, and broadcast
 /// the result to every connected display.
@@ -207,7 +216,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
     final positions = SelectionPainter.handlePositions(rect);
 
     for (var i = 0; i < positions.length; i++) {
-      if ((local - positions[i]).distance <= SelectionPainter.handleRadius * 2) {
+      if ((local - positions[i]).distance <=
+          SelectionPainter.handleRadius * 2) {
         return modes[i];
       }
     }
@@ -227,9 +237,17 @@ class _CanvasScreenState extends State<CanvasScreen> {
       case _DragMode.resizeBottomRight:
         _canvas.updateTransform(w: image.w + dx, h: image.h + dy);
       case _DragMode.resizeBottomLeft:
-        _canvas.updateTransform(x: image.x + dx, w: image.w - dx, h: image.h + dy);
+        _canvas.updateTransform(
+          x: image.x + dx,
+          w: image.w - dx,
+          h: image.h + dy,
+        );
       case _DragMode.resizeTopRight:
-        _canvas.updateTransform(y: image.y + dy, w: image.w + dx, h: image.h - dy);
+        _canvas.updateTransform(
+          y: image.y + dy,
+          w: image.w + dx,
+          h: image.h - dy,
+        );
       case _DragMode.resizeTopLeft:
         _canvas.updateTransform(
           x: image.x + dx,
@@ -295,13 +313,14 @@ class _CanvasScreenState extends State<CanvasScreen> {
         appBar: AppBar(
           title: const Text('Canvas'),
           actions: [
-           
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilledButton.tonalIcon(
                 onPressed: _toggleLive,
-                icon: Icon(
-                  _isLive ? Icons.cast_connected_rounded : Icons.cast_rounded,
+                icon: AppIcon(
+                  _isLive
+                      ? HugeIcons.strokeRoundedMonitorDot
+                      : HugeIcons.strokeRoundedComputerScreenShare,
                   size: 18,
                 ),
                 label: Text(_isLive ? 'Live' : 'Present'),
@@ -317,10 +336,15 @@ class _CanvasScreenState extends State<CanvasScreen> {
           children: [
             Expanded(
               child: Container(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final size = Size(constraints.maxWidth, constraints.maxHeight);
+                    final size = Size(
+                      constraints.maxWidth,
+                      constraints.maxHeight,
+                    );
                     // Letterbox to the display aspect ratio so the user draws
                     // inside a box shaped exactly like the projector output.
                     _canvasRect = CanvasOverlayService.letterbox(size);
@@ -371,7 +395,10 @@ class _CanvasScreenState extends State<CanvasScreen> {
               errorBuilder: (_, _, _) => const ColoredBox(
                 color: Colors.white12,
                 child: Center(
-                  child: Icon(Icons.broken_image_outlined, color: Colors.white38),
+                  child: AppIcon(
+                    HugeIcons.strokeRoundedAlbumNotFound01,
+                    color: Colors.white38,
+                  ),
                 ),
               ),
             ),

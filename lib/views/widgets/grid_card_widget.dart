@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'app_icon.dart';
 
 class GridCardWidget extends StatelessWidget {
-  final IconData icon;
+  final HugeIconData icon;
   final String title;
   final VoidCallback onTap;
   final Color? iconColor;
@@ -29,14 +31,13 @@ class GridCardWidget extends StatelessWidget {
     final double iconSize = compact ? 26 : 30;
     final double iconBoxSize = compact ? 52 : 60;
 
-    final TextStyle? titleStyle = (compact
-            ? theme.textTheme.bodyMedium
-            : theme.textTheme.bodyLarge)
-        ?.copyWith(
-          fontWeight: FontWeight.w700,
-          height: 1.15,
-          letterSpacing: 0.2,
-        );
+    final TextStyle? titleStyle =
+        (compact ? theme.textTheme.bodyMedium : theme.textTheme.bodyLarge)
+            ?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.15,
+              letterSpacing: 0.2,
+            );
 
     return Material(
       color: Colors.transparent,
@@ -131,10 +132,13 @@ class GridCardWidget extends StatelessWidget {
                             color: accentColor.withValues(alpha: 0.12),
                           ),
                         ),
-                        child: Icon(
-                          icon,
-                          size: iconSize,
-                          color: accentColor,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: AppIcon(
+                            icon,
+                            size: iconSize,
+                            color: accentColor,
+                          ),
                         ),
                       ),
                       SizedBox(height: compact ? 14 : 18),
@@ -167,8 +171,8 @@ class GridCardWidget extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.arrow_forward_rounded,
+                          AppIcon(
+                            HugeIcons.strokeRoundedArrowRight01,
                             size: compact ? 18 : 20,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),

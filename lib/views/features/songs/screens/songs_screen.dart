@@ -3,6 +3,8 @@ import 'browse_songs_screen.dart';
 import 'my_songs_list_screen.dart';
 import 'song_sync_screen.dart';
 import 'web/web_search_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class SongsScreen extends StatelessWidget {
   const SongsScreen({super.key});
@@ -17,7 +19,7 @@ class SongsScreen extends StatelessWidget {
           children: [
             _buildMenuCard(
               context,
-              icon: Icons.music_note,
+              icon: HugeIcons.strokeRoundedMusicNote01,
               title: 'All Songs',
               subtitle: 'Browse and select from all available songs',
               color: Colors.purple,
@@ -33,7 +35,7 @@ class SongsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildMenuCard(
               context,
-              icon: Icons.playlist_play,
+              icon: HugeIcons.strokeRoundedListMusic,
               title: 'My Songs List',
               subtitle: 'Add custom songs to your personal list',
               color: Colors.blue,
@@ -49,7 +51,7 @@ class SongsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildMenuCard(
               context,
-              icon: Icons.language,
+              icon: HugeIcons.strokeRoundedGlobe02,
               title: 'Web Search (beta)',
               subtitle: 'Search and import Tamil Christian songs from the web',
               color: Colors.teal,
@@ -65,7 +67,7 @@ class SongsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildMenuCard(
               context,
-              icon: Icons.sync,
+              icon: HugeIcons.strokeRoundedRefresh04,
               title: 'Sync Songs',
               subtitle: 'Download and sync Tamil songs from the CDN',
               color: Colors.indigo,
@@ -79,7 +81,7 @@ class SongsScreen extends StatelessWidget {
 
   Widget _buildMenuCard(
     BuildContext context, {
-    required IconData icon,
+    required HugeIconData icon,
     required String title,
     required String subtitle,
     required Color color,
@@ -109,7 +111,7 @@ class SongsScreen extends StatelessWidget {
                   color: color.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 24, color: color),
+                child: AppIcon(icon, size: 24, color: color),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -120,7 +122,7 @@ class SongsScreen extends StatelessWidget {
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16
+                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -130,14 +132,14 @@ class SongsScreen extends StatelessWidget {
                         color: Theme.of(
                           context,
                         ).colorScheme.onSurface.withOpacity(0.6),
-                        fontSize: 14
+                        fontSize: 14,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
+              AppIcon(
+                HugeIcons.strokeRoundedArrowRight01,
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
               ),
             ],

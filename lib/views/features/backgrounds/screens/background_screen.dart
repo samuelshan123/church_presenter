@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../../services/background_service.dart';
 import '../../../../services/image_compression_service.dart';
 import '../../../../services/server_service.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class BackgroundScreen extends StatelessWidget {
   final ServerService serverService;
@@ -88,7 +90,7 @@ class BackgroundScreen extends StatelessWidget {
                               ),
                               FilledButton.tonalIcon(
                                 onPressed: () => _clearImage(context),
-                                icon: const Icon(Icons.clear),
+                                icon: AppIcon(HugeIcons.strokeRoundedCancel01),
                                 label: const Text('Clear'),
                               ),
                             ],
@@ -103,8 +105,8 @@ class BackgroundScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(32.0),
                       child: Column(
                         children: [
-                          Icon(
-                            Icons.image_outlined,
+                          AppIcon(
+                            HugeIcons.strokeRoundedImage02,
                             size: 80,
                             color: Theme.of(
                               context,
@@ -125,7 +127,7 @@ class BackgroundScreen extends StatelessWidget {
                 // Select Image Button
                 FilledButton.icon(
                   onPressed: () => _pickImage(context),
-                  icon: const Icon(Icons.add_photo_alternate),
+                  icon: AppIcon(HugeIcons.strokeRoundedImageAdd01),
                   label: const Text('Select Background Image'),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.all(16),
@@ -150,7 +152,7 @@ class BackgroundScreen extends StatelessWidget {
                         ? Theme.of(context).colorScheme.primaryContainer
                         : null,
                     child: ListTile(
-                      leading: Icon(
+                      leading: AppIcon(
                         _getDisplayTypeIcon(type),
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
@@ -164,8 +166,8 @@ class BackgroundScreen extends StatelessWidget {
                       ),
                       subtitle: Text(_getDisplayTypeDescription(type)),
                       trailing: isSelected
-                          ? Icon(
-                              Icons.check_circle,
+                          ? AppIcon(
+                              HugeIcons.strokeRoundedCheckmarkCircle02,
                               color: Theme.of(context).colorScheme.primary,
                             )
                           : null,
@@ -184,14 +186,14 @@ class BackgroundScreen extends StatelessWidget {
     );
   }
 
-  IconData _getDisplayTypeIcon(DisplayType type) {
+  HugeIconData _getDisplayTypeIcon(DisplayType type) {
     switch (type) {
       case DisplayType.fullscreen:
-        return Icons.fullscreen;
+        return HugeIcons.strokeRoundedFullScreen;
       case DisplayType.portrait:
-        return Icons.stay_current_portrait;
+        return HugeIcons.strokeRoundedSmartPhone01;
       case DisplayType.landscape:
-        return Icons.stay_current_landscape;
+        return HugeIcons.strokeRoundedSmartPhoneLandscape;
     }
   }
 

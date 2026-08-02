@@ -9,18 +9,11 @@ class SongList {
 
   bool get isDefault => name == defaultListName;
 
-  SongList({
-    this.id,
-    required this.name,
-    DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  SongList({this.id, required this.name, DateTime? createdAt})
+    : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'createdAt': createdAt.toIso8601String(),
-    };
+    return {'id': id, 'name': name, 'createdAt': createdAt.toIso8601String()};
   }
 
   factory SongList.fromMap(Map<String, dynamic> map) {

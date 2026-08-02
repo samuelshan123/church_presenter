@@ -33,7 +33,10 @@ class ImageCompressionService {
   /// Compresses [source] into the app's documents directory and returns the new
   /// file. Returns [source] unchanged when compression is skipped or fails, so
   /// callers can treat the result as "the file to use" without null handling.
-  Future<File> compress(File source, {String subdirectory = 'compressed'}) async {
+  Future<File> compress(
+    File source, {
+    String subdirectory = 'compressed',
+  }) async {
     try {
       final extension = path.extension(source.path).toLowerCase();
       if (!_compressible.contains(extension)) return source;

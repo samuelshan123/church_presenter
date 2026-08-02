@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/theme_service.dart';
 import '../../services/presenter_config_service.dart';
 import '../widgets/presenter_settings_panel.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../widgets/app_icon.dart';
 
 class SettingsScreen extends StatefulWidget {
   final ThemeService themeService;
@@ -29,8 +31,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: Icon(
-                    Icons.brightness_6,
+                  leading: AppIcon(
+                    HugeIcons.strokeRoundedSun03,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: const Text('Theme Mode'),
@@ -55,7 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             });
                           }
                         },
-                        secondary: const Icon(Icons.light_mode),
+                        secondary: AppIcon(HugeIcons.strokeRoundedSun03),
                       ),
                       RadioListTile<ThemeMode>(
                         title: const Text('Dark'),
@@ -69,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             });
                           }
                         },
-                        secondary: const Icon(Icons.dark_mode),
+                        secondary: AppIcon(HugeIcons.strokeRoundedMoon02),
                       ),
                       RadioListTile<ThemeMode>(
                         title: const Text('System'),
@@ -83,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             });
                           }
                         },
-                        secondary: const Icon(Icons.auto_awesome),
+                        secondary: AppIcon(HugeIcons.strokeRoundedSparkles),
                       ),
                     ],
                   ),
@@ -97,45 +99,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ListTile(
-                  leading: Icon(
-                    Icons.tv,
+                  leading: AppIcon(
+                    HugeIcons.strokeRoundedTv01,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: const Text('Presenter Settings'),
                   subtitle: const Text('Customize presentation display'),
                 ),
                 const Divider(),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: PresenterSettingsPanel(
-                  presenterConfig: widget.presenterConfig,
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: PresenterSettingsPanel(
+                    presenterConfig: widget.presenterConfig,
+                  ),
                 ),
-              ),
               ],
             ),
           ),
           const SizedBox(height: 8),
           Card(
             child: ListTile(
-              leading: Icon(
-                Icons.language,
+              leading: AppIcon(
+                HugeIcons.strokeRoundedGlobe02,
                 color: Theme.of(context).colorScheme.primary,
               ),
               title: const Text('Language'),
               subtitle: const Text('Select preferred language'),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: AppIcon(HugeIcons.strokeRoundedArrowRight01),
             ),
           ),
           const SizedBox(height: 8),
           Card(
             child: ListTile(
-              leading: Icon(
-                Icons.notifications,
+              leading: AppIcon(
+                HugeIcons.strokeRoundedNotification02,
                 color: Theme.of(context).colorScheme.primary,
               ),
               title: const Text('Notifications'),
               subtitle: const Text('Manage notifications'),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: AppIcon(HugeIcons.strokeRoundedArrowRight01),
             ),
           ),
         ],

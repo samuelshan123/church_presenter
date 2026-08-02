@@ -64,12 +64,14 @@ class WebSearchService {
       if (realUrl == null) continue;
       final key = _normalizeTitle(item['title']!);
       if (seen.add(key)) {
-        results.add(WebSongResult(
-          title: item['title']!,
-          source: item['url']!,
-          resolvedSource: realUrl,
-          lyrics: '',
-        ));
+        results.add(
+          WebSongResult(
+            title: item['title']!,
+            source: item['url']!,
+            resolvedSource: realUrl,
+            lyrics: '',
+          ),
+        );
       }
     }
     return results;
@@ -112,8 +114,7 @@ class WebSearchService {
 
   String? _extractRealUrl(String duckUrl) {
     try {
-      final normalized =
-          duckUrl.startsWith('//') ? 'https:$duckUrl' : duckUrl;
+      final normalized = duckUrl.startsWith('//') ? 'https:$duckUrl' : duckUrl;
       final parsed = Uri.parse(normalized);
       final uddg = parsed.queryParameters['uddg'];
       if (uddg != null && uddg.isNotEmpty) return Uri.decodeComponent(uddg);
@@ -151,16 +152,19 @@ class WebSearchService {
 
         // Strip noise elements
         container
-            .querySelectorAll('script, style, noscript, iframe, nav, footer, header')
+            .querySelectorAll(
+              'script, style, noscript, iframe, nav, footer, header',
+            )
             .forEach((e) => e.remove());
 
         // Convert <br> to newlines before text extraction
         var html = container.innerHtml;
-        html =
-            html.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+        html = html.replaceAll(
+          RegExp(r'<br\s*/?>', caseSensitive: false),
+          '\n',
+        );
 
-        final text =
-            htmlParser.parse(html).body?.text.trim() ?? '';
+        final text = htmlParser.parse(html).body?.text.trim() ?? '';
         if (text.length > 50) return _cleanLyrics(text);
       }
 
@@ -235,8 +239,7 @@ class WebSearchService {
     return title
         .toLowerCase()
         .replaceAll(RegExp(r'lyrics', caseSensitive: false), '')
-        .replaceAll(
-            RegExp(r'tamil christian songs', caseSensitive: false), '')
+        .replaceAll(RegExp(r'tamil christian songs', caseSensitive: false), '')
         .replaceAll(RegExp(r'christian song', caseSensitive: false), '')
         .replaceAll(RegExp(r'song lyrics', caseSensitive: false), '')
         .replaceAll(RegExp(r'[^a-z0-9\u0B80-\u0BFF]'), '')

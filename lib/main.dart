@@ -46,7 +46,9 @@ InputDecorationTheme _buildInputDecorationTheme(ColorScheme colorScheme) {
     focusedBorder: borderWith(colorScheme.primary, width: 2),
     errorBorder: borderWith(colorScheme.error),
     focusedErrorBorder: borderWith(colorScheme.error, width: 2),
-    disabledBorder: borderWith(colorScheme.outlineVariant.withValues(alpha: 0.5)),
+    disabledBorder: borderWith(
+      colorScheme.outlineVariant.withValues(alpha: 0.5),
+    ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   );
 }

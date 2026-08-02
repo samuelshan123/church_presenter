@@ -12,12 +12,7 @@ class ListSong {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'listId': listId,
-      'songId': songId,
-      'order': order,
-    };
+    return {'id': id, 'listId': listId, 'songId': songId, 'order': order};
   }
 
   factory ListSong.fromMap(Map<String, dynamic> map) {

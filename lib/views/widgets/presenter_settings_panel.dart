@@ -116,10 +116,7 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
         const SizedBox(height: 16),
 
         // ── Background Color ───────────────────────────────────────────────
-        Text(
-          'Background Color',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('Background Color', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         _ColorSwatch(
           color: widget.presenterConfig.bgColorValue ?? Colors.black,
@@ -134,10 +131,7 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
         const SizedBox(height: 16),
 
         // ── Text Color ─────────────────────────────────────────────────────
-        Text(
-          'Text Color',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('Text Color', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         _ColorSwatch(
           color: widget.presenterConfig.fgColorValue ?? Colors.white,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../models/canvas_models.dart';
 import '../../../../services/canvas_overlay_service.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 /// Tool, colour, width, and history controls for the canvas.
 ///
@@ -54,7 +56,7 @@ class CanvasToolbar extends StatelessWidget {
                 child: Row(
                   children: [
                     _ToolButton(
-                      icon: Icons.edit_rounded,
+                      icon: HugeIcons.strokeRoundedPen01,
                       label: 'Pen',
                       selected: !selecting && canvas.tool == DrawTool.pen,
                       onTap: () {
@@ -63,16 +65,17 @@ class CanvasToolbar extends StatelessWidget {
                       },
                     ),
                     _ToolButton(
-                      icon: Icons.brush_rounded,
+                      icon: HugeIcons.strokeRoundedHighlighter,
                       label: 'Marker',
-                      selected: !selecting && canvas.tool == DrawTool.highlighter,
+                      selected:
+                          !selecting && canvas.tool == DrawTool.highlighter,
                       onTap: () {
                         onSelectingChanged(false);
                         canvas.setTool(DrawTool.highlighter);
                       },
                     ),
                     _ToolButton(
-                      icon: Icons.auto_fix_normal_rounded,
+                      icon: HugeIcons.strokeRoundedEraser,
                       label: 'Erase',
                       selected: !selecting && canvas.tool == DrawTool.eraser,
                       onTap: () {
@@ -81,7 +84,7 @@ class CanvasToolbar extends StatelessWidget {
                       },
                     ),
                     _ToolButton(
-                      icon: Icons.open_with_rounded,
+                      icon: HugeIcons.strokeRoundedMove,
                       label: 'Move',
                       selected: selecting,
                       onTap: () => onSelectingChanged(true),
@@ -90,13 +93,13 @@ class CanvasToolbar extends StatelessWidget {
                     const VerticalDivider(width: 1),
                     const SizedBox(width: 8),
                     _ToolButton(
-                      icon: Icons.image_outlined,
+                      icon: HugeIcons.strokeRoundedImage02,
                       label: 'Image',
                       selected: false,
                       onTap: onAddImage,
                     ),
                     _ToolButton(
-                      icon: Icons.undo_rounded,
+                      icon: HugeIcons.strokeRoundedUndo03,
                       label: 'Undo',
                       selected: false,
                       enabled: canvas.canUndo,
@@ -106,7 +109,7 @@ class CanvasToolbar extends StatelessWidget {
                       },
                     ),
                     _ToolButton(
-                      icon: Icons.redo_rounded,
+                      icon: HugeIcons.strokeRoundedRedo,
                       label: 'Redo',
                       selected: false,
                       enabled: canvas.canRedo,
@@ -116,7 +119,7 @@ class CanvasToolbar extends StatelessWidget {
                       },
                     ),
                     _ToolButton(
-                      icon: Icons.delete_sweep_rounded,
+                      icon: HugeIcons.strokeRoundedDelete03,
                       label: 'Clear',
                       selected: false,
                       enabled: !canvas.isEmpty,
@@ -138,7 +141,10 @@ class CanvasToolbar extends StatelessWidget {
                         canvas.bringSelectedToFront();
                         onChanged();
                       },
-                      icon: const Icon(Icons.flip_to_front_rounded, size: 18),
+                      icon: AppIcon(
+                        HugeIcons.strokeRoundedSendToBack,
+                        size: 18,
+                      ),
                       label: const Text('Bring to front'),
                     ),
                     TextButton.icon(
@@ -146,7 +152,7 @@ class CanvasToolbar extends StatelessWidget {
                         canvas.deleteSelectedImage();
                         onChanged();
                       },
-                      icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                      icon: AppIcon(HugeIcons.strokeRoundedDelete02, size: 18),
                       label: const Text('Delete'),
                       style: TextButton.styleFrom(
                         foregroundColor: colorScheme.error,
@@ -213,7 +219,7 @@ class CanvasToolbar extends StatelessWidget {
 }
 
 class _ToolButton extends StatelessWidget {
-  final IconData icon;
+  final HugeIconData icon;
   final String label;
   final bool selected;
   final bool enabled;
@@ -251,13 +257,13 @@ class _ToolButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 20, color: foreground),
+              AppIcon(icon, size: 20, color: foreground),
               const SizedBox(height: 2),
               Text(
                 label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: foreground,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: foreground),
               ),
             ],
           ),

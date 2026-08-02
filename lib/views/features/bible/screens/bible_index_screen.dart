@@ -8,6 +8,8 @@ import '../../../widgets/search_input_decoration.dart';
 import '../utils/bible_book_utils.dart';
 import '../widgets/bible_verse_history_button.dart';
 import 'bible_view_book_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class BibleIndexScreen extends StatefulWidget {
   final ServerService? serverService;
@@ -102,7 +104,7 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
         actions: [
           BibleVerseHistoryButton(onEntrySelected: _openHistoryEntry),
           IconButton(
-            icon: const Icon(Icons.tune),
+            icon: AppIcon(HugeIcons.strokeRoundedSlidersHorizontal),
             tooltip: 'Presenter Settings',
             onPressed: () =>
                 showPresenterSettingsDialog(context, globalPresenterConfig),
@@ -134,8 +136,8 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
+                  AppIcon(
+                    HugeIcons.strokeRoundedAlertCircle,
                     size: 64,
                     color: Theme.of(context).colorScheme.error,
                   ),
@@ -185,8 +187,8 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
                         ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
+                    trailing: AppIcon(
+                      HugeIcons.strokeRoundedArrowRight01,
                       size: 16,
                       color: Theme.of(context).colorScheme.primary,
                     ),

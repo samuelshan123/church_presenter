@@ -12,14 +12,14 @@ class SyncSongIndex {
   });
 
   Map<String, dynamic> toMap() => {
-        'remote_id': remoteId,
-        'title': title,
-        'bucket': bucket,
-      };
+    'remote_id': remoteId,
+    'title': title,
+    'bucket': bucket,
+  };
 
   factory SyncSongIndex.fromMap(Map<String, dynamic> map) => SyncSongIndex(
-        remoteId: map['remote_id'] as String,
-        title: map['title'] as String,
-        bucket: map['bucket'] as int,
-      );
+    remoteId: map['remote_id'] as String,
+    title: map['title'] as String,
+    bucket: map['bucket'] as int,
+  );
 }

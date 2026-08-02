@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/app_icon.dart';
 
 const BoxConstraints _compactActionConstraints = BoxConstraints(
   minWidth: 32,
@@ -8,7 +9,7 @@ const BoxConstraints _compactActionConstraints = BoxConstraints(
 /// Small icon-only action button used in list-row trailing widgets (song and
 /// list edit/delete actions).
 class CompactActionButton extends StatelessWidget {
-  final IconData icon;
+  final HugeIconData icon;
   final Color color;
   final String tooltip;
   final VoidCallback onPressed;
@@ -28,7 +29,7 @@ class CompactActionButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       splashRadius: 18,
       visualDensity: VisualDensity.compact,
-      icon: Icon(icon, size: 18),
+      icon: AppIcon(icon, size: 18),
       color: color,
       tooltip: tooltip,
       onPressed: onPressed,

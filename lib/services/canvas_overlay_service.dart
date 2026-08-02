@@ -85,8 +85,9 @@ class CanvasOverlayService extends ChangeNotifier {
   // -------------------------------------------------------------- drawing
 
   void startStroke(Offset normalised) {
-    final mode =
-        _tool == DrawTool.highlighter ? StrokeMode.highlighter : StrokeMode.pen;
+    final mode = _tool == DrawTool.highlighter
+        ? StrokeMode.highlighter
+        : StrokeMode.pen;
     _liveStroke = CanvasStroke(
       id: _nextId('s'),
       points: [normalised.dx, normalised.dy],
@@ -420,7 +421,11 @@ class CanvasOverlayService extends ChangeNotifier {
   bool _strokeHitTest(CanvasStroke stroke, Offset point, double radius) {
     final threshold = radius + stroke.width / 2;
     for (var i = 0; i < stroke.pointCount - 1; i++) {
-      if (_distanceToSegment(point, stroke.offsetAt(i), stroke.offsetAt(i + 1)) <
+      if (_distanceToSegment(
+            point,
+            stroke.offsetAt(i),
+            stroke.offsetAt(i + 1),
+          ) <
           threshold) {
         return true;
       }

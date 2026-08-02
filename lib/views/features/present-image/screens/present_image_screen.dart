@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../../services/image_compression_service.dart';
 import '../../../../services/image_service.dart';
 import '../../../../services/server_service.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class PresentImageScreen extends StatelessWidget {
   final ServerService serverService;
@@ -98,7 +100,7 @@ class PresentImageScreen extends StatelessWidget {
             builder: (context, imageService, child) {
               if (imageService.hasCurrentImage) {
                 return IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon: AppIcon(HugeIcons.strokeRoundedCancel01),
                   tooltip: 'Clear presentation',
                   onPressed: () => _clearPresentation(context),
                 );
@@ -115,8 +117,8 @@ class PresentImageScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.photo_library_outlined,
+                  AppIcon(
+                    HugeIcons.strokeRoundedAlbum02,
                     size: 80,
                     color: Theme.of(
                       context,
@@ -139,7 +141,7 @@ class PresentImageScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: () => _pickImage(context),
-                    icon: const Icon(Icons.add_photo_alternate),
+                    icon: AppIcon(HugeIcons.strokeRoundedImageAdd01),
                     label: const Text('Add Image'),
                   ),
                 ],
@@ -155,7 +157,7 @@ class PresentImageScreen extends StatelessWidget {
                   children: [
                     FilledButton.icon(
                       onPressed: () => _pickImage(context),
-                      icon: const Icon(Icons.add_photo_alternate),
+                      icon: AppIcon(HugeIcons.strokeRoundedImageAdd01),
                       label: const Text('Add Image'),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
@@ -171,8 +173,8 @@ class PresentImageScreen extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.settings,
+                                  AppIcon(
+                                    HugeIcons.strokeRoundedSettings02,
                                     size: 20,
                                     color: Theme.of(
                                       context,
@@ -243,7 +245,9 @@ class PresentImageScreen extends StatelessWidget {
                                         });
                                       }
                                     },
-                                    icon: const Icon(Icons.zoom_out),
+                                    icon: AppIcon(
+                                      HugeIcons.strokeRoundedZoomOutArea,
+                                    ),
                                     tooltip: 'Zoom Out',
                                   ),
                                   const SizedBox(width: 8),
@@ -285,7 +289,9 @@ class PresentImageScreen extends StatelessWidget {
                                         });
                                       }
                                     },
-                                    icon: const Icon(Icons.zoom_in),
+                                    icon: AppIcon(
+                                      HugeIcons.strokeRoundedZoomInArea,
+                                    ),
                                     tooltip: 'Zoom In',
                                   ),
                                   const SizedBox(width: 8),
@@ -300,7 +306,9 @@ class PresentImageScreen extends StatelessWidget {
                                         });
                                       }
                                     },
-                                    icon: const Icon(Icons.refresh),
+                                    icon: AppIcon(
+                                      HugeIcons.strokeRoundedRefresh,
+                                    ),
                                     tooltip: 'Reset Zoom',
                                   ),
                                 ],
@@ -312,7 +320,7 @@ class PresentImageScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       FilledButton.tonalIcon(
                         onPressed: () => _clearPresentation(context),
-                        icon: const Icon(Icons.clear),
+                        icon: AppIcon(HugeIcons.strokeRoundedCancel01),
                         label: const Text('Clear Current Presentation'),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
@@ -372,8 +380,8 @@ class PresentImageScreen extends StatelessWidget {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(
-                                          Icons.play_arrow,
+                                        AppIcon(
+                                          HugeIcons.strokeRoundedPlay,
                                           size: 16,
                                           color: Theme.of(
                                             context,
@@ -400,7 +408,10 @@ class PresentImageScreen extends StatelessWidget {
                             top: 4,
                             right: 4,
                             child: IconButton.filled(
-                              icon: const Icon(Icons.delete, size: 18),
+                              icon: AppIcon(
+                                HugeIcons.strokeRoundedDelete02,
+                                size: 18,
+                              ),
                               onPressed: () => _deleteImage(context, imagePath),
                               style: IconButton.styleFrom(
                                 backgroundColor: Colors.black54,

@@ -16,8 +16,7 @@ mixin SectionBroadcastController<T extends StatefulWidget> on State<T> {
   ServerService? get serverService;
   List<String> get sections;
 
-  bool get _serverActive =>
-      serverService != null && serverService!.isRunning;
+  bool get _serverActive => serverService != null && serverService!.isRunning;
 
   void initSectionBroadcastListener() {
     globalPresenterConfig.addListener(_onPresenterConfigChanged);

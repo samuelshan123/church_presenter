@@ -62,7 +62,12 @@ class StrokePainter extends CustomPainter {
           (current.dx + next.dx) / 2,
           (current.dy + next.dy) / 2,
         );
-        path.quadraticBezierTo(current.dx, current.dy, midpoint.dx, midpoint.dy);
+        path.quadraticBezierTo(
+          current.dx,
+          current.dy,
+          midpoint.dx,
+          midpoint.dy,
+        );
       }
       final last = scaled(stroke.pointCount - 1);
       path.lineTo(last.dx, last.dy);

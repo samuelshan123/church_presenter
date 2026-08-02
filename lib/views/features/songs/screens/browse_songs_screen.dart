@@ -5,17 +5,42 @@ import '../../../../db/models/song.dart';
 import '../../../../main.dart';
 import 'song_sync_screen.dart';
 import 'view_song_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 // ---------------------------------------------------------------------------
 // Tamil letter index
 // ---------------------------------------------------------------------------
 
 const List<String> _kTamilAlphabet = [
-  'அ', 'ஆ', 'இ', 'ஈ', 'உ', 'ஊ',
-  'எ', 'ஏ', 'ஐ', 'ஒ', 'ஓ',
-  'க', 'ச', 'ஜ', 'ஞ', 'ட', 'த',
-  'ந', 'ப', 'ம', 'ய', 'ர',
-  'ல', 'வ', 'ஷ', 'ஸ', 'ஸ்ரீ', 'ஹ',
+  'அ',
+  'ஆ',
+  'இ',
+  'ஈ',
+  'உ',
+  'ஊ',
+  'எ',
+  'ஏ',
+  'ஐ',
+  'ஒ',
+  'ஓ',
+  'க',
+  'ச',
+  'ஜ',
+  'ஞ',
+  'ட',
+  'த',
+  'ந',
+  'ப',
+  'ம',
+  'ய',
+  'ர',
+  'ல',
+  'வ',
+  'ஷ',
+  'ஸ',
+  'ஸ்ரீ',
+  'ஹ',
 ];
 
 // ---------------------------------------------------------------------------
@@ -38,7 +63,7 @@ class BrowseSongsScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.sync),
+            icon: AppIcon(HugeIcons.strokeRoundedRefresh04),
             tooltip: 'Sync Songs',
             onPressed: () => Navigator.push(context, SongSyncScreen.route()),
           ),
@@ -51,15 +76,15 @@ class BrowseSongsScreen extends StatelessWidget {
           children: [
             Text(
               'Select a letter to browse Tamil songs',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: cs.onSurfaceVariant),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
@@ -209,7 +234,7 @@ class _SongsByLetterScreenState extends State<SongsByLetterScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.sync),
+            icon: AppIcon(HugeIcons.strokeRoundedRefresh04),
             tooltip: 'Sync Songs',
             onPressed: () => Navigator.push(context, SongSyncScreen.route()),
           ),
@@ -223,11 +248,11 @@ class _SongsByLetterScreenState extends State<SongsByLetterScreen> {
             child: SearchBar(
               controller: _searchCtrl,
               hintText: 'Search in "${widget.letter}" songs…',
-              leading: const Icon(Icons.search, size: 20),
+              leading: AppIcon(HugeIcons.strokeRoundedSearch01, size: 20),
               trailing: [
                 if (_searchCtrl.text.isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
+                    icon: AppIcon(HugeIcons.strokeRoundedCancel01, size: 18),
                     onPressed: _searchCtrl.clear,
                   ),
               ],
@@ -240,16 +265,16 @@ class _SongsByLetterScreenState extends State<SongsByLetterScreen> {
 
           // Count
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 _isLoading
                     ? 'Loading…'
                     : '${_songs.length} song${_songs.length == 1 ? '' : 's'}',
-                style: theme.textTheme.labelMedium
-                    ?.copyWith(color: cs.onSurfaceVariant),
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -259,68 +284,61 @@ class _SongsByLetterScreenState extends State<SongsByLetterScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _songs.isEmpty
-                    ? _EmptyState(letter: widget.letter)
-                    : ListView.separated(
-                        physics: const BouncingScrollPhysics(),
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 6, 16, 24),
-                        itemCount: _songs.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 6),
-                        itemBuilder: (context, index) {
-                          final s = _songs[index];
-                          final isOpening = _openingId == s.remoteId;
-                          return Card(
-                            margin: EdgeInsets.zero,
-                            child: ListTile(
-                              dense: true,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 4,
+                ? _EmptyState(letter: widget.letter)
+                : ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                    itemCount: _songs.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 6),
+                    itemBuilder: (context, index) {
+                      final s = _songs[index];
+                      final isOpening = _openingId == s.remoteId;
+                      return Card(
+                        margin: EdgeInsets.zero,
+                        child: ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          leading: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: cs.primary.withValues(alpha: 0.1),
+                            child: Text(
+                              s.title.isNotEmpty ? s.title[0] : '?',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: cs.primary,
                               ),
-                              leading: CircleAvatar(
-                                radius: 18,
-                                backgroundColor:
-                                    cs.primary.withValues(alpha: 0.1),
-                                child: Text(
-                                  s.title.isNotEmpty
-                                      ? s.title[0]
-                                      : '?',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          title: Text(
+                            s.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: isOpening
+                              ? SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                     color: cs.primary,
                                   ),
+                                )
+                              : AppIcon(
+                                  HugeIcons.strokeRoundedArrowRight01,
+                                  size: 20,
                                 ),
-                              ),
-                              title: Text(
-                                s.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              trailing: isOpening
-                                  ? SizedBox.square(
-                                      dimension: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: cs.primary,
-                                      ),
-                                    )
-                                  : const Icon(
-                                      Icons.chevron_right,
-                                      size: 20,
-                                    ),
-                              onTap: () =>
-                                  _openSong(s.remoteId, s.title),
-                            ),
-                          );
-                        },
-                      ),
+                          onTap: () => _openSong(s.remoteId, s.title),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -343,8 +361,8 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.music_off_outlined,
+          AppIcon(
+            HugeIcons.strokeRoundedMusicNoteSquare01,
             size: 64,
             color: cs.onSurface.withValues(alpha: 0.2),
           ),
@@ -352,24 +370,21 @@ class _EmptyState extends StatelessWidget {
           Text(
             'No songs found for "$letter"',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: cs.onSurface.withValues(alpha: 0.45),
-                ),
+              color: cs.onSurface.withValues(alpha: 0.45),
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Sync songs first from the Sync Songs page.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: cs.onSurface.withValues(alpha: 0.35),
-                ),
+              color: cs.onSurface.withValues(alpha: 0.35),
+            ),
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: () => Navigator.push(
-              context,
-              SongSyncScreen.route(),
-            ),
-            icon: const Icon(Icons.sync),
+            onPressed: () => Navigator.push(context, SongSyncScreen.route()),
+            icon: AppIcon(HugeIcons.strokeRoundedRefresh04),
             label: const Text('Sync Songs'),
           ),
         ],

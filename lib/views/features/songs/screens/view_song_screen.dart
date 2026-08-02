@@ -10,6 +10,8 @@ import '../../../widgets/presenter_settings_panel.dart';
 import '../utils/list_name_sheet.dart';
 import '../utils/section_broadcast_controller.dart';
 import '../utils/song_section_parser.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class ViewSongScreen extends StatefulWidget {
   final Song song;
@@ -86,17 +88,15 @@ class _ViewSongScreenState extends State<ViewSongScreen>
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite_border),
+            icon: AppIcon(HugeIcons.strokeRoundedFavourite),
             tooltip: 'Add to List',
             onPressed: _showAddToListDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.tune),
+            icon: AppIcon(HugeIcons.strokeRoundedSlidersHorizontal),
             tooltip: 'Presenter Settings',
-            onPressed: () => showPresenterSettingsDialog(
-              context,
-              globalPresenterConfig,
-            ),
+            onPressed: () =>
+                showPresenterSettingsDialog(context, globalPresenterConfig),
           ),
         ],
       ),
@@ -232,9 +232,7 @@ class _AddToListSheetState extends State<_AddToListSheet> {
 
     if (name == null || name.trim().isEmpty) return;
 
-    final newList = await widget.db.createSongList(
-      SongList(name: name.trim()),
-    );
+    final newList = await widget.db.createSongList(SongList(name: name.trim()));
     await widget.db.addSongToList(newList.id!, widget.songId);
 
     setState(() {
@@ -280,26 +278,26 @@ class _AddToListSheetState extends State<_AddToListSheet> {
             const Divider(height: 1),
             Expanded(
               child: _lists.isEmpty
-                  ? const Center(
-                      child: Text('No lists yet. Create one below.'),
-                    )
+                  ? const Center(child: Text('No lists yet. Create one below.'))
                   : ListView.builder(
                       itemCount: _lists.length,
                       itemBuilder: (context, index) {
                         final list = _lists[index];
                         final inList = _membership[list.id!] ?? false;
                         return ListTile(
-                          leading: Icon(
-                            list.isDefault ? Icons.star : Icons.playlist_play,
+                          leading: AppIcon(
+                            list.isDefault
+                                ? HugeIcons.strokeRoundedStar
+                                : HugeIcons.strokeRoundedPlayList,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           title: Text(list.name),
                           trailing: inList
-                              ? Icon(
-                                  Icons.check_circle,
+                              ? AppIcon(
+                                  HugeIcons.strokeRoundedCheckmarkCircle02,
                                   color: Theme.of(context).colorScheme.primary,
                                 )
-                              : const Icon(Icons.add_circle_outline),
+                              : AppIcon(HugeIcons.strokeRoundedPlusSignCircle),
                           onTap: () => _toggleList(list),
                         );
                       },
@@ -307,7 +305,7 @@ class _AddToListSheetState extends State<_AddToListSheet> {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.create_new_folder_outlined),
+              leading: AppIcon(HugeIcons.strokeRoundedFolderAdd),
               title: const Text('Create New List'),
               onTap: _createAndAddToList,
             ),

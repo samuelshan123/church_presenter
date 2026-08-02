@@ -19,13 +19,11 @@ import '../db/models/sync_song_index.dart';
 ///     bucketNumber = floor(songId / 50), offset = songId % 50
 class SongSyncService {
   static const String _language = 'tamil';
-  static const String _baseCdn =
-      'https://samsolomonprabu.github.io/cdn/cs/v3';
+  static const String _baseCdn = 'https://samsolomonprabu.github.io/cdn/cs/v3';
 
   final http.Client _client;
 
-  SongSyncService({http.Client? client})
-      : _client = client ?? http.Client();
+  SongSyncService({http.Client? client}) : _client = client ?? http.Client();
 
   // ---------------------------------------------------------------------------
   // Private helpers
@@ -58,17 +56,12 @@ class SongSyncService {
     final response = await _client
         .get(
           Uri.parse(url),
-          headers: {
-            'User-Agent': 'Mozilla/5.0',
-            'Accept': '*/*',
-          },
+          headers: {'User-Agent': 'Mozilla/5.0', 'Accept': '*/*'},
         )
         .timeout(const Duration(seconds: 30));
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'HTTP ${response.statusCode} for $url',
-      );
+      throw Exception('HTTP ${response.statusCode} for $url');
     }
 
     return _decodeCompressedPayload(response.body);
@@ -117,9 +110,7 @@ class SongSyncService {
     if (data is Map<String, dynamic>) return data;
     // Older-format fallback: plain JSON array → convert to string-keyed map.
     if (data is List) {
-      return {
-        for (int i = 0; i < data.length; i++) i.toString(): data[i],
-      };
+      return {for (int i = 0; i < data.length; i++) i.toString(): data[i]};
     }
     throw Exception(
       'Bucket $bucketNumber returned unexpected format '
@@ -172,15 +163,16 @@ class SongSyncService {
         continue;
       }
 
-      final lyrics =
-          (raw is Map ? (raw['c'] as String? ?? '') : '').trim();
+      final lyrics = (raw is Map ? (raw['c'] as String? ?? '') : '').trim();
 
-      details.add(SyncSongDetail(
-        remoteId: record.remoteId,
-        title: record.title,
-        lyrics: lyrics,
-        syncedAt: now,
-      ));
+      details.add(
+        SyncSongDetail(
+          remoteId: record.remoteId,
+          title: record.title,
+          lyrics: lyrics,
+          syncedAt: now,
+        ),
+      );
     }
 
     return details;

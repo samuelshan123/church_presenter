@@ -43,6 +43,7 @@ class ServerService extends ChangeNotifier {
   String get serverUrl => 'http://$_deviceIp:$port';
   List<String> get serverUrls =>
       _deviceIps.map((e) => 'http://${e.$2}:$port').toList();
+
   /// Ranked best-first: the first entry is the address other devices on the
   /// same network are most likely able to reach. [isRecommended] marks entries
   /// that are genuine physical LAN adapters on a private-router range.

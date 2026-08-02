@@ -5,6 +5,8 @@ import '../utils/confirm_delete_dialog.dart';
 import '../utils/list_name_sheet.dart';
 import '../widgets/compact_action_button.dart';
 import 'view_list_songs_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class MySongsListScreen extends StatefulWidget {
   const MySongsListScreen({super.key});
@@ -105,7 +107,7 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
       appBar: AppBar(title: const Text('My Songs List'), elevation: 0),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createList,
-        icon: const Icon(Icons.add),
+        icon: AppIcon(HugeIcons.strokeRoundedAdd01),
         label: const Text('New List'),
       ),
       body: _isLoading
@@ -128,13 +130,13 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               CompactActionButton(
-                                icon: Icons.edit,
+                                icon: HugeIcons.strokeRoundedPencilEdit02,
                                 color: Colors.blue,
                                 tooltip: 'Rename list',
                                 onPressed: () => _renameList(list),
                               ),
                               CompactActionButton(
-                                icon: Icons.delete,
+                                icon: HugeIcons.strokeRoundedDelete02,
                                 color: Colors.red,
                                 tooltip: 'Delete list',
                                 onPressed: () => _deleteList(list),

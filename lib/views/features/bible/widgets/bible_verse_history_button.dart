@@ -1,6 +1,8 @@
 import 'package:church_presenter/db/database_helper.dart';
 import 'package:flutter/material.dart';
 import '../utils/bible_history_format.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 typedef BibleVerseHistoryEntrySelected =
     void Function(Map<String, dynamic> entry);
@@ -71,10 +73,10 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
                                 ? 'Newest first'
                                 : 'Oldest first',
                             child: TextButton.icon(
-                              icon: Icon(
+                              icon: AppIcon(
                                 _historySortNewest
-                                    ? Icons.arrow_downward
-                                    : Icons.arrow_upward,
+                                    ? HugeIcons.strokeRoundedArrowDown01
+                                    : HugeIcons.strokeRoundedArrowUp01,
                                 size: 16,
                               ),
                               label: Text(
@@ -83,7 +85,8 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
                               ),
                               onPressed: () {
                                 setState(
-                                  () => _historySortNewest = !_historySortNewest,
+                                  () =>
+                                      _historySortNewest = !_historySortNewest,
                                 );
                                 setSheetState(() {});
                               },
@@ -194,7 +197,7 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.history),
+      icon: AppIcon(HugeIcons.strokeRoundedClock01),
       tooltip: 'Verse History',
       onPressed: _showHistoryDialog,
     );

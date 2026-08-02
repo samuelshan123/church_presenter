@@ -3,6 +3,8 @@ import '../../../../../services/web_search_service.dart';
 import '../../../../../services/server_service.dart';
 import '../../../../widgets/search_input_decoration.dart';
 import 'web_song_detail_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../../widgets/app_icon.dart';
 
 class WebSearchScreen extends StatefulWidget {
   final ServerService? serverService;
@@ -79,10 +81,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Web Search (beta)'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Web Search (beta)'), elevation: 0),
       body: Column(
         children: [
           _buildSearchBar(),
@@ -118,11 +117,12 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.travel_explore),
+                : AppIcon(HugeIcons.strokeRoundedGlobalSearch),
             tooltip: 'Search',
             style: IconButton.styleFrom(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ],
@@ -151,14 +151,15 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+              AppIcon(
+                HugeIcons.strokeRoundedWifiDisconnected01,
+                size: 48,
+                color: Colors.grey,
+              ),
               const SizedBox(height: 16),
               Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: _search,
-                child: const Text('Retry'),
-              ),
+              OutlinedButton(onPressed: _search, child: const Text('Retry')),
             ],
           ),
         ),
@@ -170,20 +171,18 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.language,
-                size: 64,
-                color:
-                    Theme.of(context).colorScheme.primary.withOpacity(0.4)),
+            AppIcon(
+              HugeIcons.strokeRoundedGlobe02,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               'Search for Tamil Christian songs\nfrom the web',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.5),
-                  ),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
             ),
           ],
         ),
@@ -195,17 +194,18 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.search_off, size: 48, color: Colors.grey),
+            AppIcon(
+              HugeIcons.strokeRoundedSearchRemove,
+              size: 48,
+              color: Colors.grey,
+            ),
             const SizedBox(height: 12),
             Text(
               'No results found.\nTry a different search term.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.5),
-                  ),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
             ),
           ],
         ),
@@ -242,26 +242,26 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
                   children: [
                     Text(
                       result.title,
-                      style:
-                          Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.language, size: 13, color: Colors.grey),
+                        AppIcon(
+                          HugeIcons.strokeRoundedGlobe02,
+                          size: 13,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           domain,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
+                          style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
-                                color:
-                                    Theme.of(context).colorScheme.primary,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                         ),
                       ],
@@ -269,7 +269,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right),
+              AppIcon(HugeIcons.strokeRoundedArrowRight01),
             ],
           ),
         ),

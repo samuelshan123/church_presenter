@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'app_icon.dart';
 
 /// A banner that displays information about broadcasting content
 class BroadcastInfoBanner extends StatelessWidget {
@@ -14,7 +16,7 @@ class BroadcastInfoBanner extends StatelessWidget {
       color: Colors.blue.withOpacity(0.1),
       child: Row(
         children: [
-          Icon(Icons.touch_app, size: 16, color: Colors.blue),
+          AppIcon(HugeIcons.strokeRoundedTouch01, size: 16, color: Colors.blue),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

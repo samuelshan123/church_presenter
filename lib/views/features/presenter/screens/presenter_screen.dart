@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../services/server_service.dart';
 import 'test_page.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../../widgets/app_icon.dart';
 
 class PresenterScreen extends StatefulWidget {
   final ServerService serverService;
@@ -60,9 +62,9 @@ class _PresenterScreenState extends State<PresenterScreen> {
 
   void _copyUrl(String url) {
     Clipboard.setData(ClipboardData(text: url));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('📋 Copied: $url')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('📋 Copied: $url')));
   }
 
   /// The primary URL plus, behind an expander, any other addresses this device
@@ -93,8 +95,10 @@ class _PresenterScreenState extends State<PresenterScreen> {
                       : 'Other addresses (${others.length})',
                   style: const TextStyle(fontSize: 12, color: Colors.white70),
                 ),
-                Icon(
-                  _showAllUrls ? Icons.expand_less : Icons.expand_more,
+                AppIcon(
+                  _showAllUrls
+                      ? HugeIcons.strokeRoundedArrowUp01
+                      : HugeIcons.strokeRoundedArrowDown01,
                   size: 18,
                   color: Colors.white70,
                 ),
@@ -146,7 +150,11 @@ class _PresenterScreenState extends State<PresenterScreen> {
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () => _copyUrl(info.url),
-              child: const Icon(Icons.copy, size: 20, color: Colors.white),
+              child: AppIcon(
+                HugeIcons.strokeRoundedCopy01,
+                size: 20,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -172,7 +180,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
         actions: [
           if (widget.serverService.isRunning)
             IconButton(
-              icon: const Icon(Icons.science),
+              icon: AppIcon(HugeIcons.strokeRoundedTestTube01),
               tooltip: 'Test Message',
               onPressed: _navigateToTest,
             ),
@@ -203,10 +211,10 @@ class _PresenterScreenState extends State<PresenterScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(
+                    AppIcon(
                       widget.serverService.isRunning
-                          ? Icons.wifi_tethering
-                          : Icons.wifi_off,
+                          ? HugeIcons.strokeRoundedWifiConnected01
+                          : HugeIcons.strokeRoundedWifiDisconnected01,
                       size: 60,
                       color: Colors.white,
                     ),
@@ -237,10 +245,10 @@ class _PresenterScreenState extends State<PresenterScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _toggleServer,
-                    icon: Icon(
+                    icon: AppIcon(
                       widget.serverService.isRunning
-                          ? Icons.stop
-                          : Icons.play_arrow,
+                          ? HugeIcons.strokeRoundedStop
+                          : HugeIcons.strokeRoundedPlay,
                     ),
                     label: Text(
                       widget.serverService.isRunning
@@ -259,7 +267,6 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     ),
                   ),
                 ),
-
               ],
             ),
             const SizedBox(height: 24),
@@ -273,8 +280,8 @@ class _PresenterScreenState extends State<PresenterScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.info_outline,
+                        AppIcon(
+                          HugeIcons.strokeRoundedInformationCircle,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 12),
@@ -319,8 +326,8 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.message,
+                          AppIcon(
+                            HugeIcons.strokeRoundedMessage01,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(width: 12),

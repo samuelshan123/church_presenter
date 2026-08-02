@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'app_icon.dart';
 
 /// A control bar with Previous, Next, and Clear buttons for broadcast navigation
 class BroadcastControlBar extends StatelessWidget {
@@ -41,7 +43,7 @@ class BroadcastControlBar extends StatelessWidget {
         children: [
           ElevatedButton.icon(
             onPressed: hasPrevious ? onPrevious : null,
-            icon: const Icon(Icons.arrow_back, size: iconSize),
+            icon: AppIcon(HugeIcons.strokeRoundedArrowLeft01, size: iconSize),
             label: const Text('Prev', style: labelStyle),
             style: ElevatedButton.styleFrom(
               padding: buttonPadding,
@@ -52,7 +54,7 @@ class BroadcastControlBar extends StatelessWidget {
           const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: hasNext ? onNext : null,
-            icon: const Icon(Icons.arrow_forward, size: iconSize),
+            icon: AppIcon(HugeIcons.strokeRoundedArrowRight01, size: iconSize),
             label: const Text('Next', style: labelStyle),
             style: ElevatedButton.styleFrom(
               padding: buttonPadding,
@@ -63,7 +65,7 @@ class BroadcastControlBar extends StatelessWidget {
           const Spacer(),
           ElevatedButton.icon(
             onPressed: onClear,
-            icon: const Icon(Icons.clear, size: iconSize),
+            icon: AppIcon(HugeIcons.strokeRoundedCancel01, size: iconSize),
             label: const Text('Clear', style: labelStyle),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade400,

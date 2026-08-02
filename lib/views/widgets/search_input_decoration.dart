@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'app_icon.dart';
 
 /// Shared borderless pill-style decoration for search boxes (Bible index,
 /// book selector, web song search) — kept visually distinct from regular
@@ -10,22 +12,28 @@ InputDecoration searchInputDecoration({
 }) {
   return InputDecoration(
     hintText: hintText,
-    prefixIcon: const Icon(Icons.search),
+    prefixIcon: Padding(
+      padding: const EdgeInsets.all(14.0),
+      child: AppIcon(HugeIcons.strokeRoundedSearch01),
+    ),
     suffixIcon: hasValue
-        ? IconButton(icon: const Icon(Icons.clear), onPressed: onClear)
+        ? IconButton(
+            icon: AppIcon(HugeIcons.strokeRoundedCancel01),
+            onPressed: onClear,
+          )
         : null,
     isDense: true,
     filled: true,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(30),
       borderSide: BorderSide.none,
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(30),
       borderSide: BorderSide.none,
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(30),
       borderSide: BorderSide.none,
     ),
     contentPadding: const EdgeInsets.symmetric(vertical: 12),
