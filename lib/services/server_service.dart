@@ -22,6 +22,11 @@ class ServerService extends ChangeNotifier {
   String? _currentMessage;
   String _currentMessageType = 'text';
   Map<dynamic, dynamic>? _currentMetadata;
+
+  /// Drawable canvas layer, rendered *above* whatever `type`/`content` is
+  /// showing. Held separately so drawing over a verse or an image never
+  /// clobbers the underlying content. Null means no overlay is active.
+  Map<String, dynamic>? _currentOverlay;
   bool _isRunning = false;
   final int port = 8901;
   final List<WebSocketChannel> _connectedClients = [];
@@ -66,13 +71,18 @@ class ServerService extends ChangeNotifier {
           '✅ WebSocket client connected. Total: ${_connectedClients.length}',
         );
 
-        // Send current state on connection (including background)
+        // Send current state on connection. This replays the *actual* current
+        // type/metadata/overlay rather than assuming text, so a display that
+        // reconnects mid-service restores the live slide and any drawing on it
+        // instead of dropping back to a blank text screen.
         var initialPayload = {
           'config': presenterConfig.getConfig(),
           'background': backgroundService.getBackgroundConfig(),
-          'type': 'text',
+          'imageConfig': imageService.getImageConfig(),
+          'type': _currentMessageType,
           'content': _currentMessage ?? '',
-          'metadata': {},
+          'metadata': _currentMetadata ?? {},
+          'overlay': _currentOverlay,
         };
         socket.sink.add(jsonEncode(initialPayload));
 
@@ -205,6 +215,7 @@ class ServerService extends ChangeNotifier {
       _server = null;
       _isRunning = false;
       _currentMessage = null;
+      _currentOverlay = null;
       _deviceIps = <(String, String)>[];
       _deviceIp = null;
       notifyListeners();
@@ -229,6 +240,36 @@ class ServerService extends ChangeNotifier {
     _broadcast(_currentMessage ?? '', _currentMessageType, _currentMetadata);
   }
 
+  /// Broadcast the drawable canvas layer without disturbing the content beneath
+  /// it. Pass null to remove the overlay entirely.
+  ///
+  /// This is called at up to ~30Hz while a stroke is in progress, so it skips
+  /// the `notifyListeners()`/logging that [_broadcast] does — rebuilding every
+  /// listening widget on each point would stutter the controller's own canvas.
+  void sendOverlay(Map<String, dynamic>? overlay) {
+    _currentOverlay = overlay;
+    if (_connectedClients.isEmpty) return;
+
+    final data = jsonEncode({
+      'config': presenterConfig.getConfig(),
+      'background': backgroundService.getBackgroundConfig(),
+      'imageConfig': imageService.getImageConfig(),
+      'type': _currentMessageType,
+      'content': _currentMessage ?? '',
+      'metadata': _currentMetadata,
+      'overlay': overlay,
+    });
+
+    for (final client in List<WebSocketChannel>.from(_connectedClients)) {
+      try {
+        client.sink.add(data);
+      } catch (e) {
+        print('❌ Error sending overlay to client: $e');
+        _connectedClients.remove(client);
+      }
+    }
+  }
+
   void _broadcast(
     String message,
     String messageType,
@@ -241,6 +282,7 @@ class ServerService extends ChangeNotifier {
       'type': messageType,
       'content': message,
       'metadata': metadata,
+      'overlay': _currentOverlay,
     };
     final data = jsonEncode(payload);
 

@@ -7,6 +7,7 @@ import '../../services/theme_service.dart';
 import '../widgets/grid_card_widget.dart';
 import 'backgrounds/screens/background_screen.dart';
 import 'bible/screens/bible_index_screen.dart';
+import 'canvas/screens/canvas_screen.dart';
 import 'present-image/screens/present_image_screen.dart';
 import 'presenter/screens/presenter_screen.dart';
 import 'settings_screen.dart';
@@ -70,6 +71,12 @@ class _HomeScreenState extends State<HomeScreen> {
         title: 'Present Images',
         color: Colors.green,
         destinationBuilder: (_) => PresentImageScreen(serverService: serverService),
+      ),
+      _HomeAction(
+        icon: Icons.draw_rounded,
+        title: 'Canvas',
+        color: Colors.pink,
+        destinationBuilder: (_) => CanvasScreen(serverService: serverService),
       ),
       _HomeAction(
         icon: Icons.wallpaper_rounded,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../services/background_service.dart';
+import '../../../../services/image_compression_service.dart';
 import '../../../../services/server_service.dart';
 
 class BackgroundScreen extends StatelessWidget {
@@ -16,7 +17,13 @@ class BackgroundScreen extends StatelessWidget {
 
     if (image != null && context.mounted) {
       final backgroundService = context.read<BackgroundService>();
-      final result = await backgroundService.saveImage(File(image.path));
+      // Backgrounds are re-fetched by every display on each state change, so
+      // this is the most bandwidth-sensitive image in the app.
+      final compressed = await ImageCompressionService().compress(
+        File(image.path),
+      );
+      if (!context.mounted) return;
+      final result = await backgroundService.saveImage(compressed);
 
       if (result != null && context.mounted) {
         serverService.broadcastCurrentState();

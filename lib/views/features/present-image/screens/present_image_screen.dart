@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../../../services/image_compression_service.dart';
 import '../../../../services/image_service.dart';
 import '../../../../services/server_service.dart';
 
@@ -16,7 +17,12 @@ class PresentImageScreen extends StatelessWidget {
 
     if (image != null && context.mounted) {
       final imageService = context.read<ImageService>();
-      final result = await imageService.addImage(File(image.path));
+      // Downscale before it enters the gallery — displays fetch this over LAN.
+      final compressed = await ImageCompressionService().compress(
+        File(image.path),
+      );
+      if (!context.mounted) return;
+      final result = await imageService.addImage(compressed);
 
       if (result != null && context.mounted) {
         ScaffoldMessenger.of(

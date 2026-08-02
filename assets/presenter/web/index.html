@@ -89,6 +89,19 @@
       object-fit: none;
     }
 
+    /* Drawable overlay. Sits above the text and content-image layers and never
+       receives input — the display is a passive renderer. */
+    #overlay-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+      display: none;
+    }
+
     #text-container {
       width: 100vw;
       height: 100vh;
@@ -148,6 +161,8 @@
     <div id="content"></div>
   </div>
 
+  <canvas id="overlay-canvas"></canvas>
+
   <script src="https://cdn.jsdelivr.net/npm/textfit@2.4.0/textFit.min.js"></script>
 
   <script>
@@ -157,6 +172,141 @@
 
     let latestType = null;
     let latestConfig = {};
+
+    /* ------------------------------------------------------------------
+       Canvas overlay
+       Strokes and images arrive as normalised 0..1 coordinates, so the same
+       payload renders correctly at any display resolution. The normalised data
+       is the source of truth — on resize we simply repaint from it.
+    ------------------------------------------------------------------ */
+    let overlayState = null;
+    const imageCache = new Map();
+
+    /* The controller draws inside a letterboxed box of this ratio, so the
+       display must letterbox identically or the drawing would stretch. */
+    function overlayBox(canvasWidth, canvasHeight, aspect) {
+      const width = Math.min(canvasWidth, canvasHeight * aspect);
+      const height = width / aspect;
+      return {
+        x: (canvasWidth - width) / 2,
+        y: (canvasHeight - height) / 2,
+        w: width,
+        h: height
+      };
+    }
+
+    /* Loads an image once and repaints when it arrives. Without this the
+       strokes would paint over an image that hasn't downloaded yet. */
+    function getOverlayImage(url) {
+      let entry = imageCache.get(url);
+      if (entry) return entry.ready ? entry.img : null;
+
+      const img = new Image();
+      entry = { img: img, ready: false };
+      imageCache.set(url, entry);
+
+      img.onload = function () {
+        entry.ready = true;
+        renderOverlay();
+      };
+      img.onerror = function () {
+        console.error('Overlay image failed to load:', url);
+      };
+      img.src = url;
+      return null;
+    }
+
+    function drawOverlayStroke(ctx, stroke, box) {
+      const points = stroke.points || [];
+      const count = points.length / 2;
+      if (count === 0) return;
+
+      const px = i => box.x + points[i * 2] * box.w;
+      const py = i => box.y + points[i * 2 + 1] * box.h;
+
+      ctx.save();
+      ctx.strokeStyle = stroke.color || '#ffffff';
+      ctx.lineWidth = Math.max(1, (stroke.width || 0.005) * box.w);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalAlpha = stroke.opacity != null ? stroke.opacity : 1;
+      if (stroke.mode === 'highlighter') {
+        ctx.globalCompositeOperation = 'multiply';
+      }
+
+      if (count === 1) {
+        /* A tap is a dot: an arc, since a zero-length path strokes nothing. */
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.beginPath();
+        ctx.arc(px(0), py(0), ctx.lineWidth / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(px(0), py(0));
+      if (count === 2) {
+        ctx.lineTo(px(1), py(1));
+      } else {
+        /* Quadratic curves through segment midpoints — plain lineTo segments
+           read as visibly faceted at projector scale. */
+        for (let i = 1; i < count - 1; i++) {
+          const midX = (px(i) + px(i + 1)) / 2;
+          const midY = (py(i) + py(i + 1)) / 2;
+          ctx.quadraticCurveTo(px(i), py(i), midX, midY);
+        }
+        ctx.lineTo(px(count - 1), py(count - 1));
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function renderOverlay() {
+      const canvas = document.getElementById('overlay-canvas');
+      const ctx = canvas.getContext('2d');
+
+      const hasContent = overlayState &&
+        ((overlayState.images && overlayState.images.length) ||
+          (overlayState.strokes && overlayState.strokes.length));
+
+      if (!hasContent) {
+        canvas.style.display = 'none';
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      /* Back the canvas at device resolution so lines aren't blurry on retina
+         screens and 4K projectors, then work in CSS pixels. */
+      const ratio = window.devicePixelRatio || 1;
+      const cssWidth = window.innerWidth;
+      const cssHeight = window.innerHeight;
+
+      canvas.style.display = 'block';
+      canvas.width = Math.round(cssWidth * ratio);
+      canvas.height = Math.round(cssHeight * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+      const box = overlayBox(cssWidth, cssHeight, overlayState.aspect || (16 / 9));
+
+      (overlayState.images || []).forEach(function (image) {
+        const loaded = getOverlayImage(image.url);
+        if (!loaded) return;
+        ctx.drawImage(
+          loaded,
+          box.x + image.x * box.w,
+          box.y + image.y * box.h,
+          image.w * box.w,
+          image.h * box.h
+        );
+      });
+
+      (overlayState.strokes || []).forEach(function (stroke) {
+        drawOverlayStroke(ctx, stroke, box);
+      });
+    }
 
     function getDefaultContentFontSize(config) {
       if (config.fontSize && config.fontSize !== "default") {
@@ -406,6 +556,12 @@
 
           applyTextFit(type, config);
 
+          /* The overlay is an independent layer: it renders above whatever
+             text/image content is showing and never replaces it. An absent key
+             simply means no drawing is active. */
+          overlayState = data.overlay || null;
+          renderOverlay();
+
         } catch (err) {
           console.error('Parse error:', err);
         }
@@ -440,6 +596,9 @@
       if (contentEl.innerText.trim() || bookEl.innerText.trim()) {
         applyTextFit(latestType || "song", latestConfig || {});
       }
+
+      /* Repaint from the normalised source data — nothing is lost on resize. */
+      renderOverlay();
     });
 
     connectWebSocket();

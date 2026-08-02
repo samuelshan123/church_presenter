@@ -7,6 +7,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../../services/image_compression_service.dart';
 import '../utils/selection_decoration.dart';
 
 class BibleVerseImageEditorScreen extends StatefulWidget {
@@ -118,8 +119,15 @@ class _BibleVerseImageEditorScreenState
     final image = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (image == null || !mounted) return;
 
+    // Downscale before compositing — the editor renders this to an exported
+    // image, so a full-resolution source only costs memory and time.
+    final compressed = await ImageCompressionService().compress(
+      File(image.path),
+    );
+    if (!mounted) return;
+
     setState(() {
-      _backgroundImageFile = File(image.path);
+      _backgroundImageFile = compressed;
     });
   }
 
