@@ -8,6 +8,7 @@ import 'services/server_service.dart';
 import 'services/presenter_config_service.dart';
 import 'services/background_service.dart';
 import 'services/bible_language_service.dart';
+import 'services/external_display_service.dart';
 import 'services/image_service.dart';
 import 'views/features/home_screen.dart';
 
@@ -21,6 +22,9 @@ final ServerService globalServerService = ServerService(
   presenterConfig: globalPresenterConfig,
   backgroundService: globalBackgroundService,
   imageService: globalImageService,
+);
+final ExternalDisplayService globalExternalDisplay = ExternalDisplayService(
+  serverService: globalServerService,
 );
 
 void main() {
@@ -170,6 +174,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: globalImageService),
         ChangeNotifierProvider.value(value: globalSongSyncController),
         ChangeNotifierProvider.value(value: globalBibleLanguage),
+        ChangeNotifierProvider.value(value: globalExternalDisplay),
       ],
       child: MaterialApp(
         title: 'Church Presenter',

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../../../../services/external_display_service.dart';
 import '../../../../services/server_service.dart';
 import 'test_page.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -289,6 +291,32 @@ class _PresenterScreenState extends State<PresenterScreen> {
               ],
             ),
             const SizedBox(height: 24),
+
+            if (context.watch<ExternalDisplayService>().isConnected) ...[
+              Card(
+                margin: EdgeInsets.zero,
+                color: colorScheme.secondaryContainer,
+                child: ListTile(
+                  leading: AppIcon(
+                    HugeIcons.strokeRoundedTv01,
+                    color: colorScheme.onSecondaryContainer,
+                  ),
+                  title: Text(
+                    'TV connected',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'The HDMI / AirPlay screen is showing the live slides '
+                    'full-screen.',
+                    style: TextStyle(color: colorScheme.onSecondaryContainer),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Information Cards
             Card(
