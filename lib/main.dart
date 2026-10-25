@@ -7,6 +7,7 @@ import 'services/theme_service.dart';
 import 'services/server_service.dart';
 import 'services/presenter_config_service.dart';
 import 'services/background_service.dart';
+import 'services/bible_language_service.dart';
 import 'services/image_service.dart';
 import 'views/features/home_screen.dart';
 
@@ -15,6 +16,7 @@ final PresenterConfigService globalPresenterConfig = PresenterConfigService();
 final BackgroundService globalBackgroundService = BackgroundService();
 final ImageService globalImageService = ImageService();
 final SongSyncController globalSongSyncController = SongSyncController();
+final BibleLanguageService globalBibleLanguage = BibleLanguageService();
 final ServerService globalServerService = ServerService(
   presenterConfig: globalPresenterConfig,
   backgroundService: globalBackgroundService,
@@ -167,6 +169,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: globalPresenterConfig),
         ChangeNotifierProvider.value(value: globalImageService),
         ChangeNotifierProvider.value(value: globalSongSyncController),
+        ChangeNotifierProvider.value(value: globalBibleLanguage),
       ],
       child: MaterialApp(
         title: 'Church Presenter',

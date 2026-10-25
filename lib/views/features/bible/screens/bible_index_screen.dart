@@ -1,11 +1,14 @@
 import 'package:church_presenter/main.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../services/bible_language_service.dart';
 import '../../../../services/bible_service.dart';
 import '../../../../services/server_service.dart';
 import '../../../../db/models/bible_book.dart';
 import '../../../widgets/presenter_settings_panel.dart';
 import '../../../widgets/search_input_decoration.dart';
 import '../utils/bible_book_utils.dart';
+import '../widgets/bible_language_toggle.dart';
 import '../widgets/bible_verse_history_button.dart';
 import 'bible_view_book_screen.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -97,11 +100,15 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final language = context.watch<BibleLanguageService>().language;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bible'),
         elevation: 0,
         actions: [
+          const BibleLanguageToggle(),
+          const SizedBox(width: 4),
           BibleVerseHistoryButton(onEntrySelected: _openHistoryEntry),
           IconButton(
             icon: AppIcon(HugeIcons.strokeRoundedSlidersHorizontal),
@@ -173,14 +180,14 @@ class _BibleIndexScreenState extends State<BibleIndexScreen> {
                   ),
                   child: ListTile(
                     title: Text(
-                      book.tamil,
+                      book.nameIn(language),
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
                     ),
                     subtitle: Text(
-                      book.english,
+                      book.otherNameThan(language),
                       style: TextStyle(
                         color: Theme.of(
                           context,

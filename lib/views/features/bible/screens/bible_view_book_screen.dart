@@ -2,6 +2,7 @@ import 'package:church_presenter/db/database_helper.dart';
 import 'package:church_presenter/db/models/bible_book.dart';
 import 'package:church_presenter/db/models/bible_verse.dart';
 import 'package:church_presenter/main.dart';
+import 'package:church_presenter/models/bible_language.dart';
 import 'package:church_presenter/services/bible_service.dart';
 import 'package:church_presenter/services/server_service.dart';
 import 'package:church_presenter/views/features/bible/screens/bible_verse_image_editor_screen.dart';
@@ -16,6 +17,7 @@ import '../../../widgets/presenter_settings_panel.dart';
 import '../../../widgets/search_input_decoration.dart';
 import '../utils/bible_book_utils.dart';
 import '../utils/selection_decoration.dart';
+import '../widgets/bible_language_toggle.dart';
 import '../widgets/grid_selector_dialog.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../widgets/app_icon.dart';
@@ -59,22 +61,50 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
     _currentChapter = widget.initialChapter;
     _loadInitialData();
     globalPresenterConfig.addListener(_onConfigChanged);
+    globalBibleLanguage.addListener(_onLanguageChanged);
+  }
+
+  BibleLanguage get _language => globalBibleLanguage.language;
+
+  bool get _isBroadcasting =>
+      widget.serverService != null && widget.serverService!.isRunning;
+
+  /// "யோவான் 3:16" / "John 3:16" — the reference in the current language.
+  String _referenceFor(BibleVerse verse) =>
+      '${_currentBook?.nameIn(_language) ?? ''} $_currentChapter:${verse.verseNumber}';
+
+  void _broadcastVerse(BibleVerse verse) {
+    if (!_isBroadcasting) return;
+    widget.serverService!.sendMessage(verse.verseText, 'bible', {
+      'book': _referenceFor(verse),
+    });
   }
 
   void _onConfigChanged() {
-    if (_selectedVerseIndex != null &&
-        widget.serverService != null &&
-        widget.serverService!.isRunning) {
-      final verse = _verses[_selectedVerseIndex!];
-      widget.serverService!.sendMessage(verse.verseText, 'bible', {
-        'book': '${_currentBook?.tamil} $_currentChapter:${verse.verseNumber}',
-      });
+    if (_selectedVerseIndex != null) {
+      _broadcastVerse(_verses[_selectedVerseIndex!]);
     }
+  }
+
+  /// Reloads the same chapter in the new translation, staying on the selected
+  /// verse — and re-sends it, so a verse that's live on the projector
+  /// switches language too. Verse numbering is identical in both.
+  void _onLanguageChanged() {
+    if (!mounted || _currentBook == null) return;
+    final selectedVerseNumber = _selectedVerseIndex != null
+        ? _verses[_selectedVerseIndex!].verseNumber
+        : null;
+    _loadChapterData(
+      jumpToVerseNumber: selectedVerseNumber,
+      selectFirstVerse: false,
+      rebroadcast: selectedVerseNumber != null,
+    );
   }
 
   @override
   void dispose() {
     globalPresenterConfig.removeListener(_onConfigChanged);
+    globalBibleLanguage.removeListener(_onLanguageChanged);
     _scrollController.dispose();
     super.dispose();
   }
@@ -94,7 +124,11 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
     }
   }
 
-  Future<void> _loadChapterData({int? jumpToVerseNumber}) async {
+  Future<void> _loadChapterData({
+    int? jumpToVerseNumber,
+    bool selectFirstVerse = true,
+    bool rebroadcast = false,
+  }) async {
     try {
       setState(() {
         _isLoading = true;
@@ -108,6 +142,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
       final verses = await widget.bibleService.getVerses(
         _currentBook!.english,
         _currentChapter,
+        language: _language,
       );
 
       // Default to verse 1 (index 0), or jump to a specific verse
@@ -117,7 +152,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
           (v) => v.verseNumber == jumpToVerseNumber,
         );
         targetIndex = idx >= 0 ? idx : 0;
-      } else {
+      } else if (selectFirstVerse) {
         targetIndex = verses.isNotEmpty ? 0 : null;
       }
 
@@ -128,6 +163,10 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
         _isLoading = false;
         _selectedVerseIndex = targetIndex;
       });
+
+      if (rebroadcast && targetIndex != null) {
+        _broadcastVerse(verses[targetIndex]);
+      }
 
       // Scroll to target verse after frame renders
       if (targetIndex != null) {
@@ -191,20 +230,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
     _saveToHistory(verse);
     _scrollToIndex(index);
 
-    // Broadcast selected verse via server
-    if (widget.serverService != null && widget.serverService!.isRunning) {
-      final verseText = verse.verseText;
-      widget.serverService!.sendMessage(verseText, 'bible', {
-        'book': '${_currentBook?.tamil} $_currentChapter:${verse.verseNumber}',
-      });
-
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(
-      //     content: Text('📡 Verse broadcasted to all devices'),
-      //     duration: Duration(seconds: 1),
-      //   ),
-      // );
-    }
+    _broadcastVerse(verse);
   }
 
   Future<void> _saveToHistory(BibleVerse verse) async {
@@ -218,9 +244,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
   }
 
   String _formatVerseForSharing(BibleVerse verse) {
-    final reference =
-        '${_currentBook?.tamil ?? _currentBook?.english ?? ''} $_currentChapter:${verse.verseNumber}';
-    return '${verse.verseText}\n($reference)';
+    return '${verse.verseText}\n(${_referenceFor(verse)})';
   }
 
   Future<void> _copyVerse(BibleVerse verse) async {
@@ -247,7 +271,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => BibleVerseImageEditorScreen(
-          bookName: _currentBook!.tamil,
+          bookName: _currentBook!.nameIn(_language),
           chapter: _currentChapter,
           verseNumber: verse.verseNumber,
           verseText: verse.verseText,
@@ -438,6 +462,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
 
   Widget _buildTopSelector({
     required String label,
+    required String shortLabel,
     required String value,
     required VoidCallback onTap,
   }) {
@@ -448,35 +473,39 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colorScheme.outlineVariant),
           ),
-          child: Row(
-            children: [
-              Text(
-                '$label: ',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+          // Narrow phones fall back to "Ch"/"V" so a three-digit chapter
+          // (Psalms 119) still fits beside the language toggle.
+          child: LayoutBuilder(
+            builder: (context, constraints) => Row(
+              children: [
+                Text(
+                  '${constraints.maxWidth < 100 ? shortLabel : label} ',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 4),
-              AppIcon(HugeIcons.strokeRoundedArrowDown01),
-            ],
+                Expanded(
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                AppIcon(HugeIcons.strokeRoundedArrowDown01, size: 18),
+              ],
+            ),
           ),
         ),
       ),
@@ -500,7 +529,7 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        _currentBook?.tamil ?? 'Loading...',
+                        _currentBook?.nameIn(_language) ?? 'Loading...',
                         style: const TextStyle(fontSize: 18),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -574,17 +603,21 @@ class _BibleViewBookScreenState extends State<BibleViewBookScreen> {
                     children: [
                       _buildTopSelector(
                         label: 'Chapter',
+                        shortLabel: 'Ch',
                         value: '$_currentChapter',
                         onTap: _showChapterSelector,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       _buildTopSelector(
                         label: 'Verse',
+                        shortLabel: 'V',
                         value: _selectedVerseIndex != null
                             ? '${_verses[_selectedVerseIndex!].verseNumber}'
                             : '-',
                         onTap: _showVerseSelector,
                       ),
+                      const SizedBox(width: 8),
+                      const BibleLanguageToggle(),
                     ],
                   ),
                 ),
@@ -738,14 +771,16 @@ class _BookSelectorSheetState extends State<_BookSelectorSheet> {
                                 : null,
                           ),
                           title: Text(
-                            book.tamil,
+                            book.nameIn(globalBibleLanguage.language),
                             style: TextStyle(
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
                             ),
                           ),
-                          subtitle: Text(book.english),
+                          subtitle: Text(
+                            book.otherNameThan(globalBibleLanguage.language),
+                          ),
                           onTap: () => widget.onBookSelected(book),
                         );
                       },

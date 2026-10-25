@@ -78,6 +78,8 @@ Song content is free-form text split into slides by `parseSongSections()` (`lib/
 
 Each Bible book is a separate bundled asset (`assets/bible/<BookName>.json`), listed individually in `pubspec.yaml`'s `flutter.assets`. `BibleService` lazily loads and caches per-book JSON on first access rather than loading the whole Bible at startup — when adding new translations/books, follow the same per-book-file convention and remember to register the new asset path in `pubspec.yaml`.
 
+There are two translations: Tamil (`assets/bible/<BookName>.json`) and English KJV (`assets/bible/en/<BookName>.json`, registered as one folder entry). Both use the same layout and *identical* chapter/verse numbering (checked when the KJV files were generated), so `BibleService.getVerses(..., language:)` only swaps the asset path, and chapter counts always come from the Tamil file. `BibleLanguageService` (`globalBibleLanguage`) holds the quick-switch choice in SharedPreferences; Bible screens listen to it, and switching re-sends a live verse so the projector changes language too.
+
 ### Feature module layout
 
 `lib/views/features/<feature>/screens/`, `.../widgets/`, and `.../utils/` group UI by feature (bible, songs, backgrounds, presenter, present-image, canvas). Shared cross-feature widgets live in `lib/views/widgets/`. Services in `lib/services/` are the state/logic layer; screens should stay thin and delegate to services rather than holding business logic directly.

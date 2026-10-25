@@ -66,6 +66,8 @@ flutter:
   assets:
   - assets/presenter/web/index.html
   - assets/bible/
+  # English (KJV) — same per-book layout as the Tamil files above.
+  - assets/bible/en/
   - assets/bible/Books.json
   - assets/bible/Genesis.json
   - assets/bible/Exodus.json

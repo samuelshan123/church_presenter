@@ -1,4 +1,6 @@
 import 'package:church_presenter/db/database_helper.dart';
+import 'package:church_presenter/main.dart' show globalBibleLanguage;
+import 'package:church_presenter/models/bible_language.dart';
 import 'package:flutter/material.dart';
 import '../utils/bible_history_format.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -124,7 +126,7 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
                                 return ListTile(
                                   dense: true,
                                   title: Text(
-                                    '${entry['bookTamil']} ${entry['chapter']}:${entry['verseNumber']}',
+                                    '${globalBibleLanguage.language == BibleLanguage.english ? entry['bookEnglish'] : entry['bookTamil']} ${entry['chapter']}:${entry['verseNumber']}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../db/models/bible_book.dart';
 import '../db/models/bible_verse.dart';
+import '../models/bible_language.dart';
 
 class BibleService {
   static List<BibleBook>? _books;
@@ -18,18 +19,30 @@ class BibleService {
     return _books!;
   }
 
+  // Each translation is its own folder of per-book files with an identical
+  // layout, so only the asset path differs.
+  static String _assetPath(String bookName, BibleLanguage language) =>
+      switch (language) {
+        BibleLanguage.tamil => 'assets/bible/$bookName.json',
+        BibleLanguage.english => 'assets/bible/en/$bookName.json',
+      };
+
   // Load book data from JSON file
-  Future<Map<String, dynamic>> _loadBookData(String bookName) async {
-    if (_booksCache.containsKey(bookName)) {
-      return _booksCache[bookName]!;
+  Future<Map<String, dynamic>> _loadBookData(
+    String bookName, [
+    BibleLanguage language = BibleLanguage.tamil,
+  ]) async {
+    final cacheKey = '${language.name}/$bookName';
+    if (_booksCache.containsKey(cacheKey)) {
+      return _booksCache[cacheKey]!;
     }
 
     try {
       final jsonString = await rootBundle.loadString(
-        'assets/bible/$bookName.json',
+        _assetPath(bookName, language),
       );
       final bookData = json.decode(jsonString) as Map<String, dynamic>;
-      _booksCache[bookName] = bookData;
+      _booksCache[cacheKey] = bookData;
       return bookData;
     } catch (e) {
       throw Exception('Failed to load book data for $bookName: $e');
@@ -37,8 +50,12 @@ class BibleService {
   }
 
   // Get verses for a specific book and chapter
-  Future<List<BibleVerse>> getVerses(String bookName, int chapter) async {
-    final bookData = await _loadBookData(bookName);
+  Future<List<BibleVerse>> getVerses(
+    String bookName,
+    int chapter, {
+    BibleLanguage language = BibleLanguage.tamil,
+  }) async {
+    final bookData = await _loadBookData(bookName, language);
     final chapters = bookData['chapters'] as List<dynamic>;
 
     // Find the chapter (chapters are 1-indexed in JSON)
@@ -62,7 +79,9 @@ class BibleService {
     }).toList();
   }
 
-  // Get total chapters for a book
+  // Get total chapters for a book. Both translations have identical chapter
+  // counts (verified when the English files were generated), so the Tamil
+  // file is the single source.
   Future<int> getChapterCount(String bookName) async {
     final bookData = await _loadBookData(bookName);
     final count = bookData['count'];
