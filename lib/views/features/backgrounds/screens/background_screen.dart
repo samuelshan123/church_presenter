@@ -66,6 +66,7 @@ class BackgroundScreen extends StatelessWidget {
                 // Image Preview Section
                 if (backgroundService.hasImage)
                   Card(
+                    margin: EdgeInsets.zero,
                     clipBehavior: Clip.antiAlias,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -101,6 +102,7 @@ class BackgroundScreen extends StatelessWidget {
                   )
                 else
                   Card(
+                    margin: EdgeInsets.zero,
                     child: Padding(
                       padding: const EdgeInsets.all(32.0),
                       child: Column(
@@ -148,6 +150,7 @@ class BackgroundScreen extends StatelessWidget {
                 ...DisplayType.values.map((type) {
                   final isSelected = backgroundService.displayType == type;
                   return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
                     color: isSelected
                         ? Theme.of(context).colorScheme.primaryContainer
                         : null,

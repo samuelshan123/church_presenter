@@ -149,198 +149,212 @@ class PresentImageScreen extends StatelessWidget {
             );
           }
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    FilledButton.icon(
-                      onPressed: () => _pickImage(context),
-                      icon: AppIcon(HugeIcons.strokeRoundedImageAdd01),
-                      label: const Text('Add Image'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                    ),
-                    if (imageService.hasCurrentImage) ...[
-                      const SizedBox(height: 12),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  AppIcon(
-                                    HugeIcons.strokeRoundedSettings02,
-                                    size: 20,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Display Settings',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Display Mode',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                children: ImageDisplayMode.values.map((mode) {
-                                  final isSelected =
-                                      imageService.displayMode == mode;
-                                  return ChoiceChip(
-                                    label: Text(mode.label),
-                                    selected: isSelected,
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        imageService.setDisplayMode(mode);
-                                        // Re-send the current image with new settings
-                                        if (imageService.currentImagePath !=
-                                            null) {
-                                          serverService.sendMessage(
-                                            '',
-                                            'image',
-                                            {
-                                              'imagePath':
-                                                  imageService.currentImagePath,
-                                            },
-                                          );
-                                        }
-                                      }
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Zoom Level: ${(imageService.zoomLevel * 100).toInt()}%',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  IconButton.filled(
-                                    onPressed: () {
-                                      imageService.zoomOut();
-                                      if (imageService.currentImagePath !=
-                                          null) {
-                                        serverService.sendMessage('', 'image', {
-                                          'imagePath':
-                                              imageService.currentImagePath,
-                                        });
-                                      }
-                                    },
-                                    icon: AppIcon(
-                                      HugeIcons.strokeRoundedZoomOutArea,
-                                    ),
-                                    tooltip: 'Zoom Out',
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Slider(
-                                      value: imageService.zoomLevel,
-                                      min: 0.5,
-                                      max: 3.0,
-                                      divisions: 25,
-                                      label:
-                                          '${(imageService.zoomLevel * 100).toInt()}%',
-                                      onChanged: (value) {
-                                        imageService.setZoomLevel(value);
-                                      },
-                                      onChangeEnd: (value) {
-                                        if (imageService.currentImagePath !=
-                                            null) {
-                                          serverService.sendMessage(
-                                            '',
-                                            'image',
-                                            {
-                                              'imagePath':
-                                                  imageService.currentImagePath,
-                                            },
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton.filled(
-                                    onPressed: () {
-                                      imageService.zoomIn();
-                                      if (imageService.currentImagePath !=
-                                          null) {
-                                        serverService.sendMessage('', 'image', {
-                                          'imagePath':
-                                              imageService.currentImagePath,
-                                        });
-                                      }
-                                    },
-                                    icon: AppIcon(
-                                      HugeIcons.strokeRoundedZoomInArea,
-                                    ),
-                                    tooltip: 'Zoom In',
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton.outlined(
-                                    onPressed: () {
-                                      imageService.resetZoom();
-                                      if (imageService.currentImagePath !=
-                                          null) {
-                                        serverService.sendMessage('', 'image', {
-                                          'imagePath':
-                                              imageService.currentImagePath,
-                                        });
-                                      }
-                                    },
-                                    icon: AppIcon(
-                                      HugeIcons.strokeRoundedRefresh,
-                                    ),
-                                    tooltip: 'Reset Zoom',
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton.tonalIcon(
-                        onPressed: () => _clearPresentation(context),
-                        icon: AppIcon(HugeIcons.strokeRoundedCancel01),
-                        label: const Text('Clear Current Presentation'),
+          // One scroll view for controls + grid: with a fixed control panel
+          // the grid was squeezed into whatever height was left over.
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => _pickImage(context),
+                        icon: AppIcon(HugeIcons.strokeRoundedImageAdd01),
+                        label: const Text('Add Image'),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.errorContainer,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onErrorContainer,
                         ),
                       ),
+                      if (imageService.hasCurrentImage) ...[
+                        const SizedBox(height: 12),
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    AppIcon(
+                                      HugeIcons.strokeRoundedSettings02,
+                                      size: 20,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Display Settings',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Display Mode',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: ImageDisplayMode.values.map((mode) {
+                                    final isSelected =
+                                        imageService.displayMode == mode;
+                                    return ChoiceChip(
+                                      label: Text(mode.label),
+                                      selected: isSelected,
+                                      onSelected: (selected) {
+                                        if (selected) {
+                                          imageService.setDisplayMode(mode);
+                                          // Re-send the current image with new settings
+                                          if (imageService.currentImagePath !=
+                                              null) {
+                                            serverService
+                                                .sendMessage('', 'image', {
+                                                  'imagePath': imageService
+                                                      .currentImagePath,
+                                                });
+                                          }
+                                        }
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Zoom Level: ${(imageService.zoomLevel * 100).toInt()}%',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    IconButton.filledTonal(
+                                      onPressed: () {
+                                        imageService.zoomOut();
+                                        if (imageService.currentImagePath !=
+                                            null) {
+                                          serverService.sendMessage(
+                                            '',
+                                            'image',
+                                            {
+                                              'imagePath':
+                                                  imageService.currentImagePath,
+                                            },
+                                          );
+                                        }
+                                      },
+                                      icon: AppIcon(
+                                        HugeIcons.strokeRoundedZoomOutArea,
+                                      ),
+                                      tooltip: 'Zoom Out',
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Slider(
+                                        value: imageService.zoomLevel,
+                                        min: 0.5,
+                                        max: 3.0,
+                                        divisions: 25,
+                                        label:
+                                            '${(imageService.zoomLevel * 100).toInt()}%',
+                                        onChanged: (value) {
+                                          imageService.setZoomLevel(value);
+                                        },
+                                        onChangeEnd: (value) {
+                                          if (imageService.currentImagePath !=
+                                              null) {
+                                            serverService
+                                                .sendMessage('', 'image', {
+                                                  'imagePath': imageService
+                                                      .currentImagePath,
+                                                });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton.filledTonal(
+                                      onPressed: () {
+                                        imageService.zoomIn();
+                                        if (imageService.currentImagePath !=
+                                            null) {
+                                          serverService.sendMessage(
+                                            '',
+                                            'image',
+                                            {
+                                              'imagePath':
+                                                  imageService.currentImagePath,
+                                            },
+                                          );
+                                        }
+                                      },
+                                      icon: AppIcon(
+                                        HugeIcons.strokeRoundedZoomInArea,
+                                      ),
+                                      tooltip: 'Zoom In',
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton.outlined(
+                                      onPressed: () {
+                                        imageService.resetZoom();
+                                        if (imageService.currentImagePath !=
+                                            null) {
+                                          serverService.sendMessage(
+                                            '',
+                                            'image',
+                                            {
+                                              'imagePath':
+                                                  imageService.currentImagePath,
+                                            },
+                                          );
+                                        }
+                                      },
+                                      icon: AppIcon(
+                                        HugeIcons.strokeRoundedRefresh,
+                                      ),
+                                      tooltip: 'Reset Zoom',
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.tonalIcon(
+                          onPressed: () => _clearPresentation(context),
+                          icon: AppIcon(HugeIcons.strokeRoundedCancel01),
+                          label: const Text('Clear Current Presentation'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.errorContainer,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+              SliverPadding(
+                padding: const EdgeInsets.all(16.0),
+                sliver: SliverGrid.builder(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 240,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     childAspectRatio: 1,

@@ -456,22 +456,11 @@ class _SaveBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
           Text(
             'Save to…',
             style: Theme.of(

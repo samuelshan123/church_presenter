@@ -687,7 +687,7 @@ class _BookSelectorSheetState extends State<_BookSelectorSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(

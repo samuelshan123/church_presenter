@@ -39,55 +39,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(_getThemeModeText()),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    children: [
-                      RadioListTile<ThemeMode>(
-                        title: const Text('Light'),
-                        subtitle: const Text('Always use light theme'),
-                        value: ThemeMode.light,
-                        groupValue: widget.themeService.themeMode,
-                        onChanged: (ThemeMode? value) {
-                          if (value != null) {
-                            setState(() {
-                              widget.themeService.setThemeMode(value);
-                            });
-                          }
-                        },
-                        secondary: AppIcon(HugeIcons.strokeRoundedSun03),
-                      ),
-                      RadioListTile<ThemeMode>(
-                        title: const Text('Dark'),
-                        subtitle: const Text('Always use dark theme'),
-                        value: ThemeMode.dark,
-                        groupValue: widget.themeService.themeMode,
-                        onChanged: (ThemeMode? value) {
-                          if (value != null) {
-                            setState(() {
-                              widget.themeService.setThemeMode(value);
-                            });
-                          }
-                        },
-                        secondary: AppIcon(HugeIcons.strokeRoundedMoon02),
-                      ),
-                      RadioListTile<ThemeMode>(
-                        title: const Text('System'),
-                        subtitle: const Text('Follow system settings'),
-                        value: ThemeMode.system,
-                        groupValue: widget.themeService.themeMode,
-                        onChanged: (ThemeMode? value) {
-                          if (value != null) {
-                            setState(() {
-                              widget.themeService.setThemeMode(value);
-                            });
-                          }
-                        },
-                        secondary: AppIcon(HugeIcons.strokeRoundedSparkles),
-                      ),
-                    ],
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<ThemeMode>(
+                      showSelectedIcon: false,
+                      segments: const [
+                        ButtonSegment(
+                          value: ThemeMode.light,
+                          label: Text('Light'),
+                          icon: AppIcon(HugeIcons.strokeRoundedSun03, size: 18),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.dark,
+                          label: Text('Dark'),
+                          icon: AppIcon(
+                            HugeIcons.strokeRoundedMoon02,
+                            size: 18,
+                          ),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.system,
+                          label: Text('System'),
+                          icon: AppIcon(
+                            HugeIcons.strokeRoundedSmartPhone01,
+                            size: 18,
+                          ),
+                        ),
+                      ],
+                      selected: {widget.themeService.themeMode},
+                      onSelectionChanged: (selection) {
+                        setState(() {
+                          widget.themeService.setThemeMode(selection.first);
+                        });
+                      },
+                    ),
                   ),
                 ),
               ],

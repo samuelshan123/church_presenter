@@ -47,11 +47,21 @@ class AppIcon extends StatelessWidget {
       );
     }
 
-    Widget result = HugeIcon(
-      icon: icon,
-      color: resolvedColor,
-      size: resolvedSize,
-      strokeWidth: strokeWidth,
+    // [HugeIcon] is a bare `SizedBox -> SvgPicture`, so tight parent
+    // constraints (prefixIcon's 48px minimum, a padded icon box, a chip
+    // avatar, ...) stretch the box and the SVG scales up with it — the
+    // "zoomed icon" bug. Centring inside a fixed box mirrors what [Icon]
+    // does: the slot can grow, the glyph stays at [resolvedSize].
+    Widget result = SizedBox.square(
+      dimension: resolvedSize,
+      child: Center(
+        child: HugeIcon(
+          icon: icon,
+          color: resolvedColor,
+          size: resolvedSize,
+          strokeWidth: strokeWidth,
+        ),
+      ),
     );
 
     if (semanticLabel != null) {

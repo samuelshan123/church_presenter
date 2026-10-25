@@ -84,8 +84,8 @@ class BrowseSongsScreen extends StatelessWidget {
             Expanded(
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 110,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
                   childAspectRatio: 1.15,

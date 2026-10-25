@@ -56,7 +56,7 @@ class _BibleVerseHistoryButtonState extends State<BibleVerseHistoryButton> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
                       child: Row(
                         children: [
                           const Expanded(

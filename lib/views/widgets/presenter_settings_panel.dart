@@ -41,7 +41,7 @@ class _PresenterSettingsPanelState extends State<PresenterSettingsPanel> {
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +243,7 @@ void showPresenterSettingsDialog(
     ),
     builder: (context) => SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

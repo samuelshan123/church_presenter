@@ -12,10 +12,7 @@ InputDecoration searchInputDecoration({
 }) {
   return InputDecoration(
     hintText: hintText,
-    prefixIcon: Padding(
-      padding: const EdgeInsets.all(14.0),
-      child: AppIcon(HugeIcons.strokeRoundedSearch01),
-    ),
+    prefixIcon: AppIcon(HugeIcons.strokeRoundedSearch01, size: 20),
     suffixIcon: hasValue
         ? IconButton(
             icon: AppIcon(HugeIcons.strokeRoundedCancel01),

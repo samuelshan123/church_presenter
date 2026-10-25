@@ -19,7 +19,7 @@ Future<String?> showListNameSheet(
     builder: (context) => Padding(
       padding: EdgeInsets.fromLTRB(
         20,
-        16,
+        0,
         20,
         MediaQuery.of(context).viewInsets.bottom + 16,
       ),

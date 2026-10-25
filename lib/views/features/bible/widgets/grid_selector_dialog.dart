@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/selection_decoration.dart';
 
 /// Shows a numbered-grid picker dialog (used for chapter and verse
 /// selection) and returns once the user picks an item or cancels.
@@ -26,8 +25,8 @@ Future<void> showGridSelectorDialog(
           width: double.maxFinite,
           child: GridView.builder(
             shrinkWrap: true,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 72,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
               childAspectRatio: 1.4,
@@ -36,35 +35,35 @@ Future<void> showGridSelectorDialog(
             itemBuilder: (context, index) {
               final selected = isSelectedIndex(index);
               final label = labelForIndex?.call(index) ?? '${index + 1}';
-              return InkWell(
-                onTap: () {
-                  Navigator.pop(dialogContext);
-                  onSelectedIndex(index);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                    border: selectionBorder(
-                      context,
-                      isSelected: selected,
-                      selectedWidth: 2,
-                      unselectedColor: Colors.transparent,
-                      unselectedWidth: 2,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: selected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: selected
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : null,
+              final colorScheme = Theme.of(context).colorScheme;
+              // Each cell gets its own Material so the ripple is painted
+              // inside the scrolling grid. An `Ink` decoration would paint
+              // on the dialog's Material and bleed past the scroll clip.
+              return Material(
+                color: selected
+                    ? colorScheme.primaryContainer
+                    : colorScheme.surfaceContainerHighest,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: selected
+                      ? BorderSide(color: colorScheme.primary, width: 2)
+                      : BorderSide.none,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pop(dialogContext);
+                    onSelectedIndex(index);
+                  },
+                  child: Center(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontWeight: selected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: selected ? colorScheme.onPrimaryContainer : null,
+                      ),
                     ),
                   ),
                 ),

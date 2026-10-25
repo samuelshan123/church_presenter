@@ -118,7 +118,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(8),
@@ -148,9 +148,11 @@ class _PresenterScreenState extends State<PresenterScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => _copyUrl(info.url),
-              child: AppIcon(
+            IconButton(
+              onPressed: () => _copyUrl(info.url),
+              tooltip: 'Copy URL',
+              visualDensity: VisualDensity.compact,
+              icon: AppIcon(
                 HugeIcons.strokeRoundedCopy01,
                 size: 20,
                 color: Colors.white,
@@ -173,6 +175,14 @@ class _PresenterScreenState extends State<PresenterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isRunning = widget.serverService.isRunning;
+    // White on the green "running" gradient; theme colours on the neutral
+    // "offline" card so it stays legible in both light and dark mode.
+    final statusForeground = isRunning
+        ? Colors.white
+        : colorScheme.onSurfaceVariant;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Presenter'),
@@ -193,12 +203,13 @@ class _PresenterScreenState extends State<PresenterScreen> {
           children: [
             // Server Status Card
             Card(
+              margin: EdgeInsets.zero,
               elevation: 4,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
@@ -206,7 +217,10 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     end: Alignment.bottomRight,
                     colors: widget.serverService.isRunning
                         ? [Colors.green.shade400, Colors.teal.shade600]
-                        : [Colors.grey.shade300, Colors.grey.shade400],
+                        : [
+                            colorScheme.surfaceContainerHighest,
+                            colorScheme.surfaceContainerHigh,
+                          ],
                   ),
                 ),
                 child: Column(
@@ -215,20 +229,28 @@ class _PresenterScreenState extends State<PresenterScreen> {
                       widget.serverService.isRunning
                           ? HugeIcons.strokeRoundedWifiConnected01
                           : HugeIcons.strokeRoundedWifiDisconnected01,
-                      size: 60,
-                      color: Colors.white,
+                      size: 56,
+                      color: statusForeground,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     Text(
                       widget.serverService.isRunning
                           ? 'Presenter Running'
                           : 'Presenter Offline',
-                      style: const TextStyle(
-                        fontSize: 24,
+                      style: TextStyle(
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: statusForeground,
                       ),
                     ),
+                    if (!isRunning) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Start the presenter to get a display URL',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: statusForeground),
+                      ),
+                    ],
                     if (widget.serverService.isRunning) ...[
                       const SizedBox(height: 8),
                       ..._buildUrlSection(),
@@ -257,9 +279,6 @@ class _PresenterScreenState extends State<PresenterScreen> {
                     ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                       backgroundColor: widget.serverService.isRunning
                           ? Colors.red
                           : Colors.green,
@@ -273,6 +292,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
 
             // Information Cards
             Card(
+              margin: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -287,23 +307,23 @@ class _PresenterScreenState extends State<PresenterScreen> {
                         const SizedBox(width: 12),
                         Text(
                           'How to Use',
-                          style: Theme.of(context).textTheme.titleLarge
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     _buildInfoItem(
                       '1.',
-                      'Start the server by tapping "Start Server"',
+                      'Tap "Start Presenter" to start the server',
                     ),
                     _buildInfoItem(
                       '2.',
-                      'Copy the URL and open it in any browser',
+                      'Open the URL in a browser on the display device',
                     ),
                     _buildInfoItem(
                       '3.',
-                      'Use the Test button to send messages',
+                      'Use the test button (top right) to send a message',
                     ),
                     _buildInfoItem(
                       '4.',
@@ -318,6 +338,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
             // Current Message Display
             if (widget.serverService.currentMessage != null) ...[
               Card(
+                margin: EdgeInsets.zero,
                 color: Theme.of(context).colorScheme.primaryContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(16),

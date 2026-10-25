@@ -113,19 +113,26 @@ class _MySongsListScreenState extends State<MySongsListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              // Bottom padding keeps the last row clear of the FAB.
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               itemCount: _lists.length,
               itemBuilder: (context, index) {
                 final list = _lists[index];
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
+                    leading: AppIcon(
+                      list.isDefault
+                          ? HugeIcons.strokeRoundedStar
+                          : HugeIcons.strokeRoundedPlayList,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     title: Text(
                       list.name,
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     trailing: list.isDefault
-                        ? null
+                        ? AppIcon(HugeIcons.strokeRoundedArrowRight01, size: 20)
                         : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

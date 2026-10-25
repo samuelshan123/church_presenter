@@ -94,7 +94,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
   Widget _buildSearchBar() {
     final hasText = _searchController.text.isNotEmpty;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
           Expanded(
@@ -109,7 +109,8 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
               ),
             ),
           ),
-          IconButton(
+          const SizedBox(width: 8),
+          IconButton.filled(
             onPressed: _isLoading ? null : _search,
             icon: _isLoading
                 ? const SizedBox(
@@ -119,11 +120,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
                   )
                 : AppIcon(HugeIcons.strokeRoundedGlobalSearch),
             tooltip: 'Search',
-            style: IconButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+            style: IconButton.styleFrom(minimumSize: const Size.square(48)),
           ),
         ],
       ),

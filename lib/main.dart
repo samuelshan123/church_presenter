@@ -53,6 +53,67 @@ InputDecorationTheme _buildInputDecorationTheme(ColorScheme colorScheme) {
   );
 }
 
+/// Light and dark themes share everything except brightness, so they are
+/// built from one place to keep them from drifting apart.
+ThemeData _buildTheme(Brightness brightness) {
+  // Every button in the app shares one pill-like 30px radius.
+  final buttonShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(30),
+  );
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: Colors.deepPurple,
+    brightness: brightness,
+  );
+  final baseTextTheme = brightness == Brightness.light
+      ? ThemeData.light().textTheme
+      : ThemeData.dark().textTheme;
+
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: colorScheme,
+    textTheme: GoogleFonts.poppinsTextTheme(baseTextTheme),
+    cardTheme: CardThemeData(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    appBarTheme: AppBarTheme(
+      centerTitle: true,
+      elevation: 0,
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: brightness == Brightness.light
+            ? Colors.deepPurple
+            : colorScheme.onSurface,
+      ),
+    ),
+    // Floating snackbars sit above bottom bars (broadcast controls, canvas
+    // toolbar) instead of covering them edge to edge.
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(shape: buttonShape),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(shape: buttonShape),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(shape: buttonShape),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(shape: buttonShape),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      shape: buttonShape,
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(showDragHandle: true),
+    inputDecorationTheme: _buildInputDecorationTheme(colorScheme),
+  );
+}
+
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
@@ -110,63 +171,8 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       child: MaterialApp(
         title: 'Church Presenter',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepPurple,
-            brightness: Brightness.light,
-          ),
-          textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
-          cardTheme: CardThemeData(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          appBarTheme: AppBarTheme(
-            centerTitle: true,
-            elevation: 0,
-            titleTextStyle: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.deepPurple,
-            ),
-          ),
-          inputDecorationTheme: _buildInputDecorationTheme(
-            ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.light,
-            ),
-          ),
-        ),
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepPurple,
-            brightness: Brightness.dark,
-          ),
-          textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
-          cardTheme: CardThemeData(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          appBarTheme: AppBarTheme(
-            centerTitle: true,
-            elevation: 0,
-            titleTextStyle: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          inputDecorationTheme: _buildInputDecorationTheme(
-            ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.dark,
-            ),
-          ),
-        ),
+        theme: _buildTheme(Brightness.light),
+        darkTheme: _buildTheme(Brightness.dark),
         themeMode: _themeService.themeMode,
         home: HomeScreen(
           themeService: _themeService,

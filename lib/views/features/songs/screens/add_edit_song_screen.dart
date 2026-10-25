@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../db/database_helper.dart';
 import '../../../../db/models/song.dart';
-import 'package:hugeicons/hugeicons.dart';
-import '../../../widgets/app_icon.dart';
 
 class AddEditSongScreen extends StatefulWidget {
   final Song? song;
@@ -120,9 +118,6 @@ class _AddEditSongScreenState extends State<AddEditSongScreen> {
                               decoration: const InputDecoration(
                                 labelText: 'Title',
                                 hintText: 'Enter song title',
-                                prefixIcon: AppIcon(
-                                  HugeIcons.strokeRoundedTextSmallcaps,
-                                ),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
@@ -180,22 +175,20 @@ class _AddEditSongScreenState extends State<AddEditSongScreen> {
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
                 ],
               ),
               child: SafeArea(
+                top: false,
                 child: SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
+                  child: FilledButton(
                     onPressed: _isLoading ? null : _saveSong,
-                    style: ElevatedButton.styleFrom(
+                    style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
                     child: _isLoading
                         ? const SizedBox(

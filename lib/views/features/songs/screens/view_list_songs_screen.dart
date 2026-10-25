@@ -122,7 +122,7 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                 final song = _songsInList[index];
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
-                  child: InkWell(
+                  child: ListTile(
                     onTap: () {
                       Navigator.push(
                         context,
@@ -134,40 +134,38 @@ class _ViewListSongsScreenState extends State<ViewListSongsScreen> {
                         ),
                       );
                     },
-                    child: ListTile(
-                      title: Text(
-                        //index + 1 to show 1-based numbering
-                        '${index + 1}. ${song.title}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CompactActionButton(
-                            icon: HugeIcons.strokeRoundedPencilEdit02,
-                            color: Colors.blue,
-                            tooltip: 'Edit song',
-                            onPressed: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      AddEditSongScreen(song: song),
-                                ),
-                              );
-                              _loadSongs();
-                            },
-                          ),
-                          CompactActionButton(
-                            icon: HugeIcons.strokeRoundedDelete02,
-                            color: Colors.red,
-                            tooltip: 'Delete song',
-                            onPressed: () => _deleteSong(song),
-                          ),
-                        ],
-                      ),
+                    title: Text(
+                      //index + 1 to show 1-based numbering
+                      '${index + 1}. ${song.title}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CompactActionButton(
+                          icon: HugeIcons.strokeRoundedPencilEdit02,
+                          color: Colors.blue,
+                          tooltip: 'Edit song',
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    AddEditSongScreen(song: song),
+                              ),
+                            );
+                            _loadSongs();
+                          },
+                        ),
+                        CompactActionButton(
+                          icon: HugeIcons.strokeRoundedDelete02,
+                          color: Colors.red,
+                          tooltip: 'Delete song',
+                          onPressed: () => _deleteSong(song),
+                        ),
+                      ],
                     ),
                   ),
                 );

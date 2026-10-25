@@ -508,18 +508,10 @@ class _BibleVerseImageEditorScreenState
     ]);
   }
 
+  /// Wraps onto extra lines instead of scrolling sideways, so options at the
+  /// end of a row (e.g. "Justify") are never hidden off-screen.
   Widget _buildHorizontalOptions(List<Widget> children) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (var index = 0; index < children.length; index++) ...[
-            if (index > 0) const SizedBox(width: 10),
-            children[index],
-          ],
-        ],
-      ),
-    );
+    return Wrap(spacing: 10, runSpacing: 8, children: children);
   }
 
   Widget _buildLayerSelector() {
@@ -527,6 +519,7 @@ class _BibleVerseImageEditorScreenState
       ChoiceChip(
         label: const Text('Verse'),
         avatar: AppIcon(HugeIcons.strokeRoundedText, size: 18),
+        showCheckmark: false,
         selected: _selectedLayer == _EditableLayer.verse,
         onSelected: (_) {
           setState(() {
@@ -537,6 +530,7 @@ class _BibleVerseImageEditorScreenState
       ChoiceChip(
         label: const Text('Reference'),
         avatar: AppIcon(HugeIcons.strokeRoundedBook02, size: 18),
+        showCheckmark: false,
         selected: _selectedLayer == _EditableLayer.reference,
         onSelected: (_) {
           setState(() {
@@ -556,6 +550,9 @@ class _BibleVerseImageEditorScreenState
       return ChoiceChip(
         label: Text(label),
         avatar: AppIcon(icon, size: 18),
+        // The avatar already identifies the option; a checkmark would be
+        // drawn on top of it.
+        showCheckmark: false,
         selected: _activeTextAlign == value,
         onSelected: (_) => _updateActiveTextAlign(value),
       );
@@ -598,7 +595,6 @@ class _BibleVerseImageEditorScreenState
             Material(
               color: colorScheme.surfaceContainerHighest,
               child: const TabBar(
-                isScrollable: true,
                 tabs: [
                   Tab(
                     text: 'Background',
@@ -822,7 +818,7 @@ class _BibleVerseImageEditorScreenState
   }
 
   Widget _buildEditorLayout(BoxConstraints constraints) {
-    final previewHeight = constraints.maxHeight * 0.65;
+    final previewHeight = constraints.maxHeight * 0.55;
 
     return Column(
       children: [

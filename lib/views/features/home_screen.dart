@@ -190,24 +190,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       : width >= 760
                       ? 3
                       : 2; // always at least 2 columns
-                  final childAspectRatio = width >= 1100
-                      ? 1.18
-                      : width >= 760
-                      ? 1.02
-                      : width >= 430
-                      ? 1.0
-                      : 0.92;
+                  // Card height follows its content (icon box, title, footer)
+                  // rather than the column width, so cards don't balloon into
+                  // empty space on wide phones and still fit larger text.
+                  final textScaler = MediaQuery.textScalerOf(context);
+                  final cardExtent = isSmallScreen
+                      ? 116 + textScaler.scale(52)
+                      : 140 + textScaler.scale(58);
                   return CustomScrollView(
                     physics: const BouncingScrollPhysics(),
                     slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          8,
-                          horizontalPadding,
-                          18,
-                        ),
-                      ),
                       SliverPadding(
                         padding: EdgeInsets.fromLTRB(
                           horizontalPadding,
@@ -241,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisCount: crossAxisCount,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
-                                childAspectRatio: childAspectRatio,
+                                mainAxisExtent: cardExtent,
                               ),
                         ),
                       ),

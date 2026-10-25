@@ -39,150 +39,150 @@ class GridCardWidget extends StatelessWidget {
               letterSpacing: 0.2,
             );
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
+    // The decoration (with its shadow) is painted by a DecoratedBox *outside*
+    // the Material: an `Ink` decoration is painted onto the nearest Material
+    // and clipped to it, which squared off the shadow under the corners.
+    return DecoratedBox(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(borderRadius),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [
-                      colorScheme.surfaceContainerHighest,
-                      colorScheme.surfaceContainer,
-                      colorScheme.surface,
-                    ]
-                  : [
-                      Colors.white,
-                      colorScheme.surface,
-                      colorScheme.surfaceContainerLow,
-                    ],
-            ),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.05),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.22)
-                    : accentColor.withValues(alpha: 0.10),
-                blurRadius: compact ? 16 : 24,
-                offset: const Offset(0, 10),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  colorScheme.surfaceContainerHighest,
+                  colorScheme.surfaceContainer,
+                  colorScheme.surface,
+                ]
+              : [
+                  Colors.white,
+                  colorScheme.surface,
+                  colorScheme.surfaceContainerLow,
+                ],
+        ),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.05),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.22)
+                : accentColor.withValues(alpha: 0.10),
+            blurRadius: compact ? 16 : 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        borderRadius: BorderRadius.circular(borderRadius),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Stack(
+            children: [
+              Positioned(
+                top: -20,
+                right: -12,
+                child: Container(
+                  height: compact ? 84 : 100,
+                  width: compact ? 84 : 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        accentColor.withValues(alpha: isDark ? 0.18 : 0.14),
+                        accentColor.withValues(alpha: 0.02),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -26,
+                left: -14,
+                child: Container(
+                  height: compact ? 64 : 78,
+                  width: compact ? 64 : 78,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accentColor.withValues(alpha: 0.05),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: iconBoxSize,
+                      width: iconBoxSize,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            accentColor.withValues(alpha: 0.20),
+                            accentColor.withValues(alpha: 0.08),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: accentColor.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Center(
+                        child: AppIcon(
+                          icon,
+                          size: iconSize,
+                          color: accentColor,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: compact ? 14 : 18),
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: titleStyle,
+                      ),
+                    ),
+                    SizedBox(height: compact ? 8 : 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: compact ? 10 : 12,
+                            vertical: compact ? 5 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            "Open",
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: accentColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        AppIcon(
+                          HugeIcons.strokeRoundedArrowRight01,
+                          size: compact ? 18 : 20,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(borderRadius),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: -20,
-                  right: -12,
-                  child: Container(
-                    height: compact ? 84 : 100,
-                    width: compact ? 84 : 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          accentColor.withValues(alpha: isDark ? 0.18 : 0.14),
-                          accentColor.withValues(alpha: 0.02),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: -26,
-                  left: -14,
-                  child: Container(
-                    height: compact ? 64 : 78,
-                    width: compact ? 64 : 78,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: accentColor.withValues(alpha: 0.05),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(padding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: iconBoxSize,
-                        width: iconBoxSize,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              accentColor.withValues(alpha: 0.20),
-                              accentColor.withValues(alpha: 0.08),
-                            ],
-                          ),
-                          border: Border.all(
-                            color: accentColor.withValues(alpha: 0.12),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: AppIcon(
-                            icon,
-                            size: iconSize,
-                            color: accentColor,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: compact ? 14 : 18),
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: titleStyle,
-                        ),
-                      ),
-                      SizedBox(height: compact ? 8 : 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: compact ? 10 : 12,
-                              vertical: compact ? 5 : 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              "Open",
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: accentColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          AppIcon(
-                            HugeIcons.strokeRoundedArrowRight01,
-                            size: compact ? 18 : 20,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

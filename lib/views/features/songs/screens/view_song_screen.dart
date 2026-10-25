@@ -120,41 +120,53 @@ class _ViewSongScreenState extends State<ViewSongScreen>
               itemCount: _sections.length,
               itemBuilder: (context, index) {
                 final isSelected = selectedSectionIndex == index;
-                return GestureDetector(
-                  onTap: () => selectSection(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
+                final colorScheme = Theme.of(context).colorScheme;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    color: isSelected
+                        ? colorScheme.primaryContainer
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: InkWell(
+                      onTap: () => selectSection(index),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                                context,
-                              ).colorScheme.outline.withValues(alpha: 0.2),
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _sections[index],
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                height: 1.6,
-                                color: isSelected
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimaryContainer
-                                    : Theme.of(context).colorScheme.onSurface,
-                              ),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.outline.withValues(alpha: 0.2),
+                            width: isSelected ? 2 : 1,
+                          ),
                         ),
-                      ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _sections[index],
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.6,
+                                    color: isSelected
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onPrimaryContainer
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -259,7 +271,7 @@ class _AddToListSheetState extends State<_AddToListSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
               child: Row(
                 children: [
                   Expanded(

@@ -140,9 +140,6 @@ class _TestPageState extends State<TestPage> {
                     label: const Text('Paste'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
                   ),
                 ),
@@ -157,9 +154,6 @@ class _TestPageState extends State<TestPage> {
                     label: const Text('Send Message'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
                   ),
                 ),

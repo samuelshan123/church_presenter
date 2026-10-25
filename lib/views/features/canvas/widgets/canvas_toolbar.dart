@@ -51,82 +51,76 @@ class CanvasToolbar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedPen01,
-                      label: 'Pen',
-                      selected: !selecting && canvas.tool == DrawTool.pen,
-                      onTap: () {
-                        onSelectingChanged(false);
-                        canvas.setTool(DrawTool.pen);
-                      },
-                    ),
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedHighlighter,
-                      label: 'Marker',
-                      selected:
-                          !selecting && canvas.tool == DrawTool.highlighter,
-                      onTap: () {
-                        onSelectingChanged(false);
-                        canvas.setTool(DrawTool.highlighter);
-                      },
-                    ),
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedEraser,
-                      label: 'Erase',
-                      selected: !selecting && canvas.tool == DrawTool.eraser,
-                      onTap: () {
-                        onSelectingChanged(false);
-                        canvas.setTool(DrawTool.eraser);
-                      },
-                    ),
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedMove,
-                      label: 'Move',
-                      selected: selecting,
-                      onTap: () => onSelectingChanged(true),
-                    ),
-                    const SizedBox(width: 8),
-                    const VerticalDivider(width: 1),
-                    const SizedBox(width: 8),
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedImage02,
-                      label: 'Image',
-                      selected: false,
-                      onTap: onAddImage,
-                    ),
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedUndo03,
-                      label: 'Undo',
-                      selected: false,
-                      enabled: canvas.canUndo,
-                      onTap: () {
-                        canvas.undo();
-                        onChanged();
-                      },
-                    ),
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedRedo,
-                      label: 'Redo',
-                      selected: false,
-                      enabled: canvas.canRedo,
-                      onTap: () {
-                        canvas.redo();
-                        onChanged();
-                      },
-                    ),
-                    _ToolButton(
-                      icon: HugeIcons.strokeRoundedDelete03,
-                      label: 'Clear',
-                      selected: false,
-                      enabled: !canvas.isEmpty,
-                      onTap: () => _confirmClear(context),
-                    ),
-                  ],
-                ),
+              _ToolRow(
+                children: [
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedPen01,
+                    label: 'Pen',
+                    selected: !selecting && canvas.tool == DrawTool.pen,
+                    onTap: () {
+                      onSelectingChanged(false);
+                      canvas.setTool(DrawTool.pen);
+                    },
+                  ),
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedHighlighter,
+                    label: 'Marker',
+                    selected: !selecting && canvas.tool == DrawTool.highlighter,
+                    onTap: () {
+                      onSelectingChanged(false);
+                      canvas.setTool(DrawTool.highlighter);
+                    },
+                  ),
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedEraser,
+                    label: 'Erase',
+                    selected: !selecting && canvas.tool == DrawTool.eraser,
+                    onTap: () {
+                      onSelectingChanged(false);
+                      canvas.setTool(DrawTool.eraser);
+                    },
+                  ),
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedMove,
+                    label: 'Move',
+                    selected: selecting,
+                    onTap: () => onSelectingChanged(true),
+                  ),
+                  const _ToolDivider(),
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedImage02,
+                    label: 'Image',
+                    selected: false,
+                    onTap: onAddImage,
+                  ),
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedUndo03,
+                    label: 'Undo',
+                    selected: false,
+                    enabled: canvas.canUndo,
+                    onTap: () {
+                      canvas.undo();
+                      onChanged();
+                    },
+                  ),
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedRedo,
+                    label: 'Redo',
+                    selected: false,
+                    enabled: canvas.canRedo,
+                    onTap: () {
+                      canvas.redo();
+                      onChanged();
+                    },
+                  ),
+                  _ToolButton(
+                    icon: HugeIcons.strokeRoundedDelete03,
+                    label: 'Clear',
+                    selected: false,
+                    enabled: !canvas.isEmpty,
+                    onTap: () => _confirmClear(context),
+                  ),
+                ],
               ),
 
               // Image actions only appear when something is actually selected,
@@ -218,6 +212,69 @@ class CanvasToolbar extends StatelessWidget {
   }
 }
 
+/// Lays the tool buttons out edge to edge so every tool is visible at once.
+/// Only when the bar is too narrow for a usable tap target per button does it
+/// fall back to horizontal scrolling.
+class _ToolRow extends StatelessWidget {
+  final List<Widget> children;
+
+  const _ToolRow({required this.children});
+
+  static const double _minButtonWidth = 48;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final buttonCount = children.whereType<_ToolButton>().length;
+        final dividerWidth =
+            children.whereType<_ToolDivider>().length * _ToolDivider.width;
+        final fits =
+            constraints.maxWidth - dividerWidth >=
+            buttonCount * _minButtonWidth;
+
+        if (fits) {
+          return Row(
+            children: [
+              for (final child in children)
+                child is _ToolButton ? Expanded(child: child) : child,
+            ],
+          );
+        }
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final child in children)
+                child is _ToolButton
+                    ? SizedBox(width: 62, child: child)
+                    : child,
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ToolDivider extends StatelessWidget {
+  const _ToolDivider();
+
+  static const double width = 13;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      height: 36,
+      child: VerticalDivider(
+        width: width,
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
+    );
+  }
+}
+
 class _ToolButton extends StatelessWidget {
   final HugeIconData icon;
   final String label;
@@ -243,12 +300,11 @@ class _ToolButton extends StatelessWidget {
         : colorScheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 1),
       child: InkWell(
         onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 62,
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: selected ? colorScheme.primaryContainer : null,
@@ -261,6 +317,9 @@ class _ToolButton extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.fade,
+                softWrap: false,
                 style: Theme.of(
                   context,
                 ).textTheme.labelSmall?.copyWith(color: foreground),
