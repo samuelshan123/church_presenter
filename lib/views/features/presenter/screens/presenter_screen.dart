@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../../services/cast_service.dart';
 import '../../../../services/external_display_service.dart';
+import '../../../widgets/cast_button.dart';
 import '../../../../services/server_service.dart';
 import 'test_page.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -190,6 +192,7 @@ class _PresenterScreenState extends State<PresenterScreen> {
         title: const Text('Presenter'),
         elevation: 0,
         actions: [
+          const CastButton(),
           if (widget.serverService.isRunning)
             IconButton(
               icon: AppIcon(HugeIcons.strokeRoundedTestTube01),
@@ -291,6 +294,33 @@ class _PresenterScreenState extends State<PresenterScreen> {
               ],
             ),
             const SizedBox(height: 24),
+
+            if (context.watch<CastService>().isConnected) ...[
+              Card(
+                margin: EdgeInsets.zero,
+                color: colorScheme.secondaryContainer,
+                child: ListTile(
+                  leading: AppIcon(
+                    HugeIcons.strokeRoundedCast,
+                    color: colorScheme.onSecondaryContainer,
+                  ),
+                  title: Text(
+                    'Casting to '
+                    '${context.watch<CastService>().deviceName ?? 'TV'}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Everything you present also appears on this TV.',
+                    style: TextStyle(color: colorScheme.onSecondaryContainer),
+                  ),
+                  onTap: () => showCastSheet(context),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             if (context.watch<ExternalDisplayService>().isConnected) ...[
               Card(

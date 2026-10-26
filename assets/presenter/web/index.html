@@ -174,6 +174,39 @@
     let latestConfig = {};
 
     /* ------------------------------------------------------------------
+       Transport
+       In a browser this page talks to the controller over its WebSocket and
+       loads images from its /api routes. On a Chromecast it is opened as
+       `?mode=cast` over HTTPS, where those plain-HTTP requests are blocked, so
+       the controller relays the same payloads (and the images, as base64
+       "assets") over the Cast message channel instead. Everything below the
+       transport — renderPayload() — is identical for both.
+    ------------------------------------------------------------------ */
+    const CAST_MODE = new URLSearchParams(location.search).get('mode') === 'cast';
+    /* Must match kCastNamespace in lib/config/cast_config.dart. */
+    const CAST_NAMESPACE = 'urn:x-cast:com.churchpresenter.display';
+    const castAssets = new Map();   /* asset id -> object URL */
+    const castParts = new Map();    /* split message id -> pieces */
+    let lastCastState = null;
+
+    function contentImageUrl(metadata) {
+      if (CAST_MODE) return castAssets.get(metadata.imageAsset) || '';
+      return `/api/image/${encodeURIComponent(metadata.imagePath)}`;
+    }
+
+    function backgroundImageUrl(background) {
+      if (CAST_MODE) return castAssets.get(background.imageAsset) || '';
+      return '/api/background?t=' + Date.now();
+    }
+
+    /* Overlay image URLs: "asset:<id>" in cast mode, /api/image/... otherwise.
+       Null means the asset hasn't arrived yet; it repaints when it does. */
+    function resolveImageUrl(url) {
+      if (url && url.startsWith('asset:')) return castAssets.get(url.slice(6)) || null;
+      return url;
+    }
+
+    /* ------------------------------------------------------------------
        Canvas overlay
        Strokes and images arrive as normalised 0..1 coordinates, so the same
        payload renders correctly at any display resolution. The normalised data
@@ -197,7 +230,9 @@
 
     /* Loads an image once and repaints when it arrives. Without this the
        strokes would paint over an image that hasn't downloaded yet. */
-    function getOverlayImage(url) {
+    function getOverlayImage(sourceUrl) {
+      const url = resolveImageUrl(sourceUrl);
+      if (!url) return null;
       let entry = imageCache.get(url);
       if (entry) return entry.ready ? entry.img : null;
 
@@ -432,6 +467,184 @@
       });
     }
 
+    /* Renders one display payload. Every message carries the full state
+       (config, background, content, overlay), so this needs no history and is
+       shared by both transports: the WebSocket below and Google Cast. */
+    function renderPayload(data) {
+
+      let type = data.type;
+      let config = data.config || {};
+      let background = data.background || {};
+      let imageConfig = data.imageConfig || {};
+      let metadata = data.metadata || {};
+      let msg = data.content;
+
+      if (!msg) msg = "";
+
+      const body = document.body;
+      const contentEl = document.getElementById("content");
+      const bookEl = document.getElementById("book");
+      const bgImage = document.getElementById("background-image");
+      const contentImage = document.getElementById("content-image");
+      const textContainer = document.getElementById("text-container");
+
+      if (type === 'image' && metadata.imagePath) {
+        textContainer.classList.remove("bible-mode");
+
+        const imageUrl = contentImageUrl(metadata);
+        if (contentImage.getAttribute('src') !== imageUrl) contentImage.src = imageUrl;
+        contentImage.style.display = 'block';
+        textContainer.style.display = 'none';
+
+        const displayMode = imageConfig.displayMode || 'contain';
+        const zoomLevel = imageConfig.zoomLevel || 1.0;
+
+        console.log('Image Config:', {
+          displayMode: displayMode,
+          zoomLevel: zoomLevel,
+          imagePath: metadata.imagePath
+        });
+
+        contentImage.classList.remove('cover', 'contain', 'fill', 'original');
+        contentImage.classList.add(displayMode);
+
+        contentImage.style.transform = `translate(-50%, -50%) scale(${zoomLevel})`;
+      } else {
+        contentImage.style.display = 'none';
+        textContainer.style.display = 'flex';
+      }
+
+      if (background.imagePath) {
+        const backgroundUrl = backgroundImageUrl(background);
+        if (CAST_MODE) {
+          if (bgImage.getAttribute('src') !== backgroundUrl) bgImage.src = backgroundUrl;
+        } else {
+          bgImage.src = backgroundUrl;
+        }
+        bgImage.style.display = 'block';
+
+        bgImage.classList.remove('fullscreen', 'portrait', 'landscape');
+
+        if (background.displayType) {
+          bgImage.classList.add(background.displayType);
+        } else {
+          bgImage.classList.add('fullscreen');
+        }
+      } else {
+        bgImage.style.display = 'none';
+        bgImage.src = '';
+      }
+
+      if (config.bg && config.bg !== "default") {
+        body.style.background = config.bg;
+      } else {
+        body.style.background = "radial-gradient(circle, rgb(34, 34, 34), black)";
+      }
+
+      if (config.fg && config.fg !== "default") {
+        contentEl.style.color = config.fg;
+        bookEl.style.color = config.fg;
+      } else {
+        contentEl.style.color = "#fff";
+        bookEl.style.color = "#fff";
+      }
+
+      if (config.fontSize && config.fontSize !== "default") {
+        contentEl.style.fontSize = config.fontSize + "px";
+        bookEl.style.fontSize = (config.fontSize * 0.7) + "px";
+      } else {
+        contentEl.style.fontSize = "clamp(2rem, 6vw, 3.5rem)";
+        bookEl.style.fontSize = "clamp(1.5rem, 4vw, 2.5rem)";
+      }
+
+      if (config.font && config.font !== "default") {
+        body.style.fontFamily = config.font;
+      } else {
+        body.style.fontFamily = '"Baloo Thambi 2", system-ui';
+      }
+
+      bookEl.innerText = (type === 'bible' && metadata.book) ? metadata.book : '';
+      contentEl.innerText = msg;
+
+      latestType = type;
+      latestConfig = config;
+
+      applyTextFit(type, config);
+
+      /* The overlay is an independent layer: it renders above whatever
+         text/image content is showing and never replaces it. An absent key
+         simply means no drawing is active. */
+      overlayState = data.overlay || null;
+      renderOverlay();
+
+    }
+
+    function handleCastMessage(message) {
+      if (!message || typeof message !== 'object') return;
+
+      if (message.kind === 'part') {
+        /* A message over the Cast size limit, sent in pieces. */
+        let entry = castParts.get(message.id);
+        if (!entry) {
+          entry = { pieces: new Array(message.count), received: 0 };
+          castParts.set(message.id, entry);
+        }
+        if (entry.pieces[message.index] === undefined) {
+          entry.pieces[message.index] = message.text;
+          entry.received++;
+        }
+        if (entry.received === message.count) {
+          castParts.delete(message.id);
+          handleCastMessage(JSON.parse(entry.pieces.join('')));
+        }
+        return;
+      }
+
+      if (message.kind === 'asset') {
+        if (!castAssets.has(message.id)) {
+          const binary = atob(message.data);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          castAssets.set(message.id, URL.createObjectURL(new Blob([bytes], { type: message.mime })));
+        }
+        /* The state that needs this image may already be on screen. */
+        if (lastCastState) renderPayload(lastCastState);
+        return;
+      }
+
+      if (message.kind === 'state') {
+        lastCastState = message.data;
+        renderPayload(message.data);
+      }
+    }
+
+    function startCastReceiver() {
+      const script = document.createElement('script');
+      script.src = 'https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js';
+      script.onload = function () {
+        const context = cast.framework.CastReceiverContext.getInstance();
+        context.addCustomMessageListener(CAST_NAMESPACE, function (event) {
+          try {
+            handleCastMessage(event.data);
+          } catch (err) {
+            console.error('Cast message error:', err);
+          }
+        });
+        /* A freshly loaded page has no assets: ask the controller to resend. */
+        context.addEventListener(cast.framework.system.EventType.SENDER_CONNECTED, function (event) {
+          context.sendCustomMessage(CAST_NAMESPACE, event.senderId, { kind: 'ready' });
+        });
+
+        const options = new cast.framework.CastReceiverOptions();
+        options.customNamespaces = {};
+        options.customNamespaces[CAST_NAMESPACE] = cast.framework.system.MessageType.JSON;
+        options.disableIdleTimeout = true;  /* slides can sit for a whole sermon */
+        options.skipPlayersLoad = true;     /* no media player UI on top */
+        context.start(options);
+      };
+      document.head.appendChild(script);
+    }
+
     function scheduleReconnect() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
 
@@ -458,110 +671,7 @@
 
       socket.onmessage = function (event) {
         try {
-          const data = JSON.parse(event.data);
-          console.log(data);
-
-          let type = data.type;
-          let config = data.config || {};
-          let background = data.background || {};
-          let imageConfig = data.imageConfig || {};
-          let metadata = data.metadata || {};
-          let msg = data.content;
-
-          if (!msg) msg = "";
-
-          const body = document.body;
-          const contentEl = document.getElementById("content");
-          const bookEl = document.getElementById("book");
-          const bgImage = document.getElementById("background-image");
-          const contentImage = document.getElementById("content-image");
-          const textContainer = document.getElementById("text-container");
-
-          if (type === 'image' && metadata.imagePath) {
-            textContainer.classList.remove("bible-mode");
-
-            const encodedPath = encodeURIComponent(metadata.imagePath);
-
-            contentImage.src = `/api/image/${encodedPath}`;
-            contentImage.style.display = 'block';
-            textContainer.style.display = 'none';
-
-            const displayMode = imageConfig.displayMode || 'contain';
-            const zoomLevel = imageConfig.zoomLevel || 1.0;
-
-            console.log('Image Config:', {
-              displayMode: displayMode,
-              zoomLevel: zoomLevel,
-              imagePath: metadata.imagePath
-            });
-
-            contentImage.classList.remove('cover', 'contain', 'fill', 'original');
-            contentImage.classList.add(displayMode);
-
-            contentImage.style.transform = `translate(-50%, -50%) scale(${zoomLevel})`;
-          } else {
-            contentImage.style.display = 'none';
-            textContainer.style.display = 'flex';
-          }
-
-          if (background.imagePath) {
-            bgImage.src = '/api/background?t=' + Date.now();
-            bgImage.style.display = 'block';
-
-            bgImage.classList.remove('fullscreen', 'portrait', 'landscape');
-
-            if (background.displayType) {
-              bgImage.classList.add(background.displayType);
-            } else {
-              bgImage.classList.add('fullscreen');
-            }
-          } else {
-            bgImage.style.display = 'none';
-            bgImage.src = '';
-          }
-
-          if (config.bg && config.bg !== "default") {
-            body.style.background = config.bg;
-          } else {
-            body.style.background = "radial-gradient(circle, rgb(34, 34, 34), black)";
-          }
-
-          if (config.fg && config.fg !== "default") {
-            contentEl.style.color = config.fg;
-            bookEl.style.color = config.fg;
-          } else {
-            contentEl.style.color = "#fff";
-            bookEl.style.color = "#fff";
-          }
-
-          if (config.fontSize && config.fontSize !== "default") {
-            contentEl.style.fontSize = config.fontSize + "px";
-            bookEl.style.fontSize = (config.fontSize * 0.7) + "px";
-          } else {
-            contentEl.style.fontSize = "clamp(2rem, 6vw, 3.5rem)";
-            bookEl.style.fontSize = "clamp(1.5rem, 4vw, 2.5rem)";
-          }
-
-          if (config.font && config.font !== "default") {
-            body.style.fontFamily = config.font;
-          } else {
-            body.style.fontFamily = '"Baloo Thambi 2", system-ui';
-          }
-
-          bookEl.innerText = (type === 'bible' && metadata.book) ? metadata.book : '';
-          contentEl.innerText = msg;
-
-          latestType = type;
-          latestConfig = config;
-
-          applyTextFit(type, config);
-
-          /* The overlay is an independent layer: it renders above whatever
-             text/image content is showing and never replaces it. An absent key
-             simply means no drawing is active. */
-          overlayState = data.overlay || null;
-          renderOverlay();
-
+          renderPayload(JSON.parse(event.data));
         } catch (err) {
           console.error('Parse error:', err);
         }
@@ -578,6 +688,7 @@
     }
 
     document.addEventListener('visibilitychange', function () {
+      if (CAST_MODE) return;
       if (!document.hidden && (!socket || socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING)) {
         if (reconnectTimer) {
           clearTimeout(reconnectTimer);
@@ -601,7 +712,11 @@
       renderOverlay();
     });
 
-    connectWebSocket();
+    if (CAST_MODE) {
+      startCastReceiver();
+    } else {
+      connectWebSocket();
+    }
   </script>
 </body>
 

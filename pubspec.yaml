@@ -32,7 +32,16 @@ dependencies:
   share_plus: ^13.1.0
   package_info_plus: ^10.2.0
   flutter_image_compress: ^2.5.1
-  hugeicons: ^1.1.7
+  hugeicons: ^1.2.0 # strokeRoundedCast (Cast button) needs 1.2.0+
+  flutter_chrome_cast: ^1.5.0
+
+# flutter_chrome_cast declares permission_handler ^13 but never uses it.
+# 13.x pulls permission_handler_android 14.x, whose Gradle script needs a
+# newer Android Gradle Plugin than this project's 8.9 and fails to compile.
+# 12.x (permission_handler_android 13.x) builds fine. Revisit when AGP is
+# upgraded.
+dependency_overrides:
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

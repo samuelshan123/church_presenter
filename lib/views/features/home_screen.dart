@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../services/presenter_config_service.dart';
 import '../../services/server_service.dart';
 import '../../services/theme_service.dart';
+import '../widgets/cast_button.dart';
 import '../widgets/grid_card_widget.dart';
 import 'backgrounds/screens/background_screen.dart';
 import 'bible/screens/bible_index_screen.dart';
@@ -132,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
+          const CastButton(),
           IconButton(
             icon: AppIcon(HugeIcons.strokeRoundedSettings02),
             tooltip: 'Settings',

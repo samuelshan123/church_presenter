@@ -8,6 +8,7 @@ import 'services/server_service.dart';
 import 'services/presenter_config_service.dart';
 import 'services/background_service.dart';
 import 'services/bible_language_service.dart';
+import 'services/cast_service.dart';
 import 'services/external_display_service.dart';
 import 'services/image_service.dart';
 import 'views/features/home_screen.dart';
@@ -24,6 +25,9 @@ final ServerService globalServerService = ServerService(
   imageService: globalImageService,
 );
 final ExternalDisplayService globalExternalDisplay = ExternalDisplayService(
+  serverService: globalServerService,
+);
+final CastService globalCastService = CastService(
   serverService: globalServerService,
 );
 
@@ -144,6 +148,8 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       setState(() {});
     });
     FlutterNativeSplash.remove();
+    // No-op unless a Cast receiver app ID is configured (cast_config.dart).
+    globalCastService.initialise();
   }
 
   @override
@@ -175,6 +181,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: globalSongSyncController),
         ChangeNotifierProvider.value(value: globalBibleLanguage),
         ChangeNotifierProvider.value(value: globalExternalDisplay),
+        ChangeNotifierProvider.value(value: globalCastService),
       ],
       child: MaterialApp(
         title: 'Church Presenter',

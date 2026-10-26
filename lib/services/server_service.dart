@@ -31,6 +31,12 @@ class ServerService extends ChangeNotifier {
   final int port = 8901;
   final List<WebSocketChannel> _connectedClients = [];
 
+  /// Non-WebSocket displays (Google Cast) that receive every payload the
+  /// WebSocket clients get. Kept as plain callbacks so this service knows
+  /// nothing about casting.
+  final List<void Function(Map<String, dynamic> payload)> _payloadListeners =
+      [];
+
   ServerService({
     required this.presenterConfig,
     required this.backgroundService,
@@ -59,6 +65,47 @@ class ServerService extends ChangeNotifier {
       .toList();
   int get connectedClientsCount => _connectedClients.length;
 
+  void addPayloadListener(void Function(Map<String, dynamic>) listener) =>
+      _payloadListeners.add(listener);
+
+  void removePayloadListener(void Function(Map<String, dynamic>) listener) =>
+      _payloadListeners.remove(listener);
+
+  /// The full current display state — what a display that connects right now
+  /// should render.
+  Map<String, dynamic> get currentPayload => _buildPayload(
+    type: _currentMessageType,
+    content: _currentMessage ?? '',
+    metadata: _currentMetadata ?? {},
+    overlay: _currentOverlay,
+  );
+
+  /// Every broadcast has this same shape, so displays stay stateless.
+  Map<String, dynamic> _buildPayload({
+    required String type,
+    required String content,
+    required Map<dynamic, dynamic>? metadata,
+    required Map<String, dynamic>? overlay,
+  }) => {
+    'config': presenterConfig.getConfig(),
+    'background': backgroundService.getBackgroundConfig(),
+    'imageConfig': imageService.getImageConfig(),
+    'type': type,
+    'content': content,
+    'metadata': metadata,
+    'overlay': overlay,
+  };
+
+  void _notifyPayloadListeners(Map<String, dynamic> payload) {
+    for (final listener in List.of(_payloadListeners)) {
+      try {
+        listener(payload);
+      } catch (e) {
+        print('❌ Error in payload listener: $e');
+      }
+    }
+  }
+
   /// Service Handler
   Handler get handler {
     final router = shelf_router.Router();
@@ -76,16 +123,7 @@ class ServerService extends ChangeNotifier {
         // type/metadata/overlay rather than assuming text, so a display that
         // reconnects mid-service restores the live slide and any drawing on it
         // instead of dropping back to a blank text screen.
-        var initialPayload = {
-          'config': presenterConfig.getConfig(),
-          'background': backgroundService.getBackgroundConfig(),
-          'imageConfig': imageService.getImageConfig(),
-          'type': _currentMessageType,
-          'content': _currentMessage ?? '',
-          'metadata': _currentMetadata ?? {},
-          'overlay': _currentOverlay,
-        };
-        socket.sink.add(jsonEncode(initialPayload));
+        socket.sink.add(jsonEncode(currentPayload));
 
         // Remove client on disconnect
         socket.stream.listen(
@@ -249,17 +287,16 @@ class ServerService extends ChangeNotifier {
   /// listening widget on each point would stutter the controller's own canvas.
   void sendOverlay(Map<String, dynamic>? overlay) {
     _currentOverlay = overlay;
+    final payload = _buildPayload(
+      type: _currentMessageType,
+      content: _currentMessage ?? '',
+      metadata: _currentMetadata,
+      overlay: overlay,
+    );
+    _notifyPayloadListeners(payload);
     if (_connectedClients.isEmpty) return;
 
-    final data = jsonEncode({
-      'config': presenterConfig.getConfig(),
-      'background': backgroundService.getBackgroundConfig(),
-      'imageConfig': imageService.getImageConfig(),
-      'type': _currentMessageType,
-      'content': _currentMessage ?? '',
-      'metadata': _currentMetadata,
-      'overlay': overlay,
-    });
+    final data = jsonEncode(payload);
 
     for (final client in List<WebSocketChannel>.from(_connectedClients)) {
       try {
@@ -276,15 +313,13 @@ class ServerService extends ChangeNotifier {
     String messageType,
     Map<dynamic, dynamic>? metadata,
   ) {
-    var payload = {
-      'config': presenterConfig.getConfig(),
-      'background': backgroundService.getBackgroundConfig(),
-      'imageConfig': imageService.getImageConfig(),
-      'type': messageType,
-      'content': message,
-      'metadata': metadata,
-      'overlay': _currentOverlay,
-    };
+    final payload = _buildPayload(
+      type: messageType,
+      content: message,
+      metadata: metadata,
+      overlay: _currentOverlay,
+    );
+    _notifyPayloadListeners(payload);
     final data = jsonEncode(payload);
 
     for (final client in List<WebSocketChannel>.from(_connectedClients)) {
